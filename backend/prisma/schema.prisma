@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  password        String
+  profile_picture String?
+  branch          String?
+  batch           String?
+  github          String?
+  linkedin        String?
+  mobile_number   String?
+  created_at      DateTime @default(now())
+
+  clubsPresiding Club[]      @relation("ClubPresident")
+  memberships    Membership[]
+  applications   Application[]
+}
+
+model Club {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  website     String?
+  instagram   String?
+  linkedin    String?
+
+  president   Int
+  presidentUser User @relation("ClubPresident", fields: [president], references: [id])
+
+  formed_on   DateTime?
+  created_at  DateTime @default(now())
+
+  memberships Membership[]
+  inductions  Induction[]
+}
+
+model Membership {
+  id          Int      @id @default(autoincrement())
+
+  user_id     Int
+  club_id     Int
+
+  role        String?
+  is_admin    Boolean  @default(false)
+
+  inducted_on DateTime?
+  created_at  DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+  club Club @relation(fields: [club_id], references: [id])
+
+  @@unique([user_id, club_id])
+}
+
+model Induction {
+  id          Int      @id @default(autoincrement())
+
+  club_id     Int
+  club        Club     @relation(fields: [club_id], references: [id])
+
+  title       String
+  description String?
+
+  opened_on   DateTime?
+  closing_on  DateTime?
+
+  created_at  DateTime @default(now())
+
+  applications Application[]
+  forms        Form[]
+}
+
+model Application {
+  id           Int      @id @default(autoincrement())
+
+  user_id      Int
+  induction_id Int
+
+  status       String
+  remarks      String?
+
+  is_inducted  Boolean  @default(false)
+
+  created_at   DateTime @default(now())
+
+  user      User      @relation(fields: [user_id], references: [id])
+  induction Induction @relation(fields: [induction_id], references: [id])
+
+  responses FormResponse[]
+
+  @@unique([user_id, induction_id])
+}
+
+model Form {
+  id           Int      @id @default(autoincrement())
+
+  induction_id Int
+  induction    Induction @relation(fields: [induction_id], references: [id])
+
+  title        String
+  description  String?
+
+  created_at   DateTime @default(now())
+
+  questions    FormQuestion[]
+  responses    FormResponse[]
+}
+
+model FormQuestion {
+  id            Int      @id @default(autoincrement())
+
+  form_id       Int
+  form          Form     @relation(fields: [form_id], references: [id])
+
+  question_text String
+  question_type String
+
+  order_index   Int
+  metadata      Json?
+
+  is_required   Boolean
+
+  created_at    DateTime @default(now())
+
+  answers       FormAnswer[]
+}
+
+model FormResponse {
+  id             Int      @id @default(autoincrement())
+
+  form_id        Int
+  application_id Int
+
+  submitted_at   DateTime @default(now())
+
+  form        Form        @relation(fields: [form_id], references: [id])
+  application Application @relation(fields: [application_id], references: [id])
+
+  answers     FormAnswer[]
+}
+
+model FormAnswer {
+  id           Int      @id @default(autoincrement())
+
+  response_id  Int
+  question_id  Int
+
+  answer       String
+
+  response FormResponse @relation(fields: [response_id], references: [id])
+  question FormQuestion @relation(fields: [question_id], references: [id])
+}
