@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -14,21 +14,37 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  name            String
-  email           String   @unique
-  password        String
-  profile_picture String?
-  branch          String?
-  batch           String?
-  github          String?
-  linkedin        String?
-  mobile_number   String?
-  created_at      DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  name             String
+  email            String   @unique
+  password         String
+  profile_picture  String?
+  branch           String?
+  batch            String?
+  github           String?
+  linkedin         String?
+  mobile_number    String?
 
-  clubsPresiding Club[]      @relation("ClubPresident")
-  memberships    Membership[]
-  applications   Application[]
+  isVerified       Boolean  @default(false)
+  isProfileComplete Boolean @default(false)
+
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  clubsPresiding   Club[]       @relation("ClubPresident")
+  memberships      Membership[]
+  applications     Application[]
+  verificationTokens VerificationToken[]
+}
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int      @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Club {

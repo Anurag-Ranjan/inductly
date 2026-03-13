@@ -1,13 +1,10 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 
-const asyncHandler = (fn: any) => async (req: Request, res: Response, next:NextFunction) => {
+const asyncHandler = (fn: RequestHandler): RequestHandler => async (req: Request, res: Response, next:NextFunction) => {
   try {
     await fn(req, res, next);
   } catch (error: any) {
-    res.status(error.code || 500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
