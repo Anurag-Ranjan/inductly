@@ -43,7 +43,7 @@ model User {
   id                Int                        @id @default(autoincrement())
   name              String
   email             String                     @unique
-  // Nullable to support OAuth providers (Google, GitHub etc.) in future
+  
   password          String?
   profile_picture   String?
   branch            String?
@@ -69,8 +69,8 @@ model VerificationToken {
   token     String    @unique
   userId    Int
   type      TokenType @default(EMAIL_VERIFICATION)
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
+  expires_at DateTime  
+  created_at DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -105,7 +105,7 @@ model Membership {
   club_id     Int
   role        MemberRole @default(MEMBER)
   // Kept for backwards compat — true when role is PRESIDENT/VP/COORDINATOR
-  is_admin    Boolean    @default(false)
+  
   inducted_on DateTime?
   created_at  DateTime   @default(now())
 
@@ -147,9 +147,11 @@ model InductionStage {
   description  String?
   order_index  Int
   created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   induction    Induction                  @relation(fields: [induction_id], references: [id], onDelete: Cascade)
   progressList ApplicationStageProgress[]
+  currentApplications Application[] @relation("CurrentStage")
 
   @@unique([induction_id, order_index])
   @@index([induction_id])
@@ -163,6 +165,7 @@ model Application {
   id           Int               @id @default(autoincrement())
   user_id      Int
   induction_id Int
+  current_stage_id Int?
   status       ApplicationStatus @default(PENDING)
   remarks      String?
   is_inducted  Boolean           @default(false)
@@ -171,6 +174,7 @@ model Application {
 
   user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   induction Induction @relation(fields: [induction_id], references: [id], onDelete: Cascade)
+  currentStage     InductionStage? @relation("CurrentStage",fields: [current_stage_id], references: [id])
 
   responses     FormResponse[]
   stageProgress ApplicationStageProgress[]
@@ -179,6 +183,7 @@ model Application {
   @@index([user_id])
   @@index([induction_id])
   @@index([status])
+  @@index([current_stage_id])
 }
 
 // Tracks each applicant's result at every pipeline stage
@@ -202,6 +207,7 @@ model ApplicationStageProgress {
   @@index([application_id])
   @@index([stage_id])
   @@index([reviewed_by])
+  @@index([status])
 }
 
 // ─────────────────────────────────────────────
