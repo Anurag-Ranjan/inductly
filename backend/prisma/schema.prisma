@@ -1,183 +1,270 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum MemberRole {
+  PRESIDENT
+  VICE_PRESIDENT
+  COORDINATOR
+  MEMBER
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+}
+
+enum StageStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
+// ─────────────────────────────────────────────
+// User & Auth
+// ─────────────────────────────────────────────
+
 model User {
-  id               Int      @id @default(autoincrement())
-  name             String
-  email            String   @unique
-  password         String
-  profile_picture  String?
-  branch           String?
-  batch            String?
-  github           String?
-  linkedin         String?
-  mobile_number    String?
+  id                Int                        @id @default(autoincrement())
+  name              String
+  email             String                     @unique
+  // Nullable to support OAuth providers (Google, GitHub etc.) in future
+  password          String?
+  profile_picture   String?
+  branch            String?
+  batch             String?
+  github            String?
+  linkedin          String?
+  mobile_number     String?
+  isProfileComplete Boolean                    @default(false)
+  isVerified        Boolean                    @default(false)
+  refreshToken      String?
+  created_at        DateTime                   @default(now())
+  updated_at        DateTime                   @updatedAt
 
-  isVerified       Boolean  @default(false)
-  isProfileComplete Boolean @default(false)
-
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-
-  clubsPresiding   Club[]       @relation("ClubPresident")
-  memberships      Membership[]
-  applications     Application[]
-  verificationTokens VerificationToken[]
+  applications         Application[]
+  memberships          Membership[]
+  verificationTokens   VerificationToken[]
+  stageReviews         ApplicationStageProgress[] @relation("StageReviewer")
 }
 
+// Supports multiple token types per user (email verify + password reset)
 model VerificationToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  userId    Int      @unique
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    Int
+  type      TokenType @default(EMAIL_VERIFICATION)
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
+
+// ─────────────────────────────────────────────
+// Club & Membership
+// ─────────────────────────────────────────────
 
 model Club {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   description String?
   website     String?
   instagram   String?
   linkedin    String?
-
-  president   Int
-  presidentUser User @relation("ClubPresident", fields: [president], references: [id])
-
+  logo        String?
   formed_on   DateTime?
-  created_at  DateTime @default(now())
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
-  memberships Membership[]
   inductions  Induction[]
+  memberships Membership[]
 }
 
+// Single source of truth for all club roles.
+// Use role = PRESIDENT instead of a separate Club.president FK.
 model Membership {
-  id          Int      @id @default(autoincrement())
-
+  id          Int        @id @default(autoincrement())
   user_id     Int
   club_id     Int
-
-  role        String?
-  is_admin    Boolean  @default(false)
-
+  role        MemberRole @default(MEMBER)
+  // Kept for backwards compat — true when role is PRESIDENT/VP/COORDINATOR
+  is_admin    Boolean    @default(false)
   inducted_on DateTime?
-  created_at  DateTime @default(now())
+  created_at  DateTime   @default(now())
 
-  user User @relation(fields: [user_id], references: [id])
-  club Club @relation(fields: [club_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  club Club @relation(fields: [club_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, club_id])
+  @@index([user_id])
+  @@index([club_id])
 }
+
+// ─────────────────────────────────────────────
+// Induction & Pipeline Stages
+// ─────────────────────────────────────────────
 
 model Induction {
-  id          Int      @id @default(autoincrement())
-
+  id          Int       @id @default(autoincrement())
   club_id     Int
-  club        Club     @relation(fields: [club_id], references: [id])
-
   title       String
   description String?
-
   opened_on   DateTime?
   closing_on  DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
-  created_at  DateTime @default(now())
-
+  club         Club             @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  stages       InductionStage[]
   applications Application[]
   forms        Form[]
+
+  @@index([club_id])
 }
 
-model Application {
-  id           Int      @id @default(autoincrement())
-
-  user_id      Int
+// Ordered pipeline steps for each induction (e.g. Screening → Interview → Task)
+model InductionStage {
+  id           Int    @id @default(autoincrement())
   induction_id Int
-
-  status       String
-  remarks      String?
-
-  is_inducted  Boolean  @default(false)
-
+  name         String
+  description  String?
+  order_index  Int
   created_at   DateTime @default(now())
 
-  user      User      @relation(fields: [user_id], references: [id])
-  induction Induction @relation(fields: [induction_id], references: [id])
+  induction    Induction                  @relation(fields: [induction_id], references: [id], onDelete: Cascade)
+  progressList ApplicationStageProgress[]
 
-  responses FormResponse[]
+  @@unique([induction_id, order_index])
+  @@index([induction_id])
+}
+
+// ─────────────────────────────────────────────
+// Applications & Stage Progress
+// ─────────────────────────────────────────────
+
+model Application {
+  id           Int               @id @default(autoincrement())
+  user_id      Int
+  induction_id Int
+  status       ApplicationStatus @default(PENDING)
+  remarks      String?
+  is_inducted  Boolean           @default(false)
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  induction Induction @relation(fields: [induction_id], references: [id], onDelete: Cascade)
+
+  responses     FormResponse[]
+  stageProgress ApplicationStageProgress[]
 
   @@unique([user_id, induction_id])
+  @@index([user_id])
+  @@index([induction_id])
+  @@index([status])
 }
+
+// Tracks each applicant's result at every pipeline stage
+model ApplicationStageProgress {
+  id             Int         @id @default(autoincrement())
+  application_id Int
+  stage_id       Int
+  status         StageStatus @default(PENDING)
+  score          Int?
+  notes          String?
+  reviewed_by    Int?
+  reviewed_at    DateTime?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+
+  application Application    @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  stage       InductionStage @relation(fields: [stage_id], references: [id], onDelete: Cascade)
+  reviewer    User?          @relation("StageReviewer", fields: [reviewed_by], references: [id], onDelete: SetNull)
+
+  @@unique([application_id, stage_id])
+  @@index([application_id])
+  @@index([stage_id])
+  @@index([reviewed_by])
+}
+
+// ─────────────────────────────────────────────
+// Forms
+// ─────────────────────────────────────────────
 
 model Form {
   id           Int      @id @default(autoincrement())
-
   induction_id Int
-  induction    Induction @relation(fields: [induction_id], references: [id])
-
   title        String
   description  String?
-
   created_at   DateTime @default(now())
 
-  questions    FormQuestion[]
-  responses    FormResponse[]
+  induction Induction      @relation(fields: [induction_id], references: [id], onDelete: Cascade)
+  questions FormQuestion[]
+  responses FormResponse[]
+
+  @@index([induction_id])
 }
 
 model FormQuestion {
   id            Int      @id @default(autoincrement())
-
   form_id       Int
-  form          Form     @relation(fields: [form_id], references: [id])
-
   question_text String
+  // e.g. "text" | "textarea" | "select" | "multi_select" | "checkbox" | "file"
   question_type String
-
   order_index   Int
+  // Stores options for select/multi_select, validation rules, etc.
   metadata      Json?
-
-  is_required   Boolean
-
+  is_required   Boolean  @default(false)
   created_at    DateTime @default(now())
 
-  answers       FormAnswer[]
+  form    Form         @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  answers FormAnswer[]
+
+  @@index([form_id])
+  @@index([order_index])
 }
 
 model FormResponse {
   id             Int      @id @default(autoincrement())
-
   form_id        Int
   application_id Int
-
   submitted_at   DateTime @default(now())
 
-  form        Form        @relation(fields: [form_id], references: [id])
-  application Application @relation(fields: [application_id], references: [id])
-
+  form        Form         @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  application Application  @relation(fields: [application_id], references: [id], onDelete: Cascade)
   answers     FormAnswer[]
+
+  @@index([form_id])
+  @@index([application_id])
 }
 
 model FormAnswer {
-  id           Int      @id @default(autoincrement())
+  id          Int  @id @default(autoincrement())
+  response_id Int
+  question_id Int
+  // Json to handle all answer types: plain text, arrays (multi-select), file URLs
+  answer      Json
 
-  response_id  Int
-  question_id  Int
+  response FormResponse @relation(fields: [response_id], references: [id], onDelete: Cascade)
+  question FormQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
-  answer       String
-
-  response FormResponse @relation(fields: [response_id], references: [id])
-  question FormQuestion @relation(fields: [question_id], references: [id])
+  @@index([response_id])
+  @@index([question_id])
 }
