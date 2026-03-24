@@ -301,10 +301,6 @@ const getUserProfile: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, { user }, 'Profile fetched successfully'));
 });
 
-// getting profile information
-// club dashboards, pagination, and other optimisations, refreshAccessToken
-// building the frontend
-
 export {
     registerUser,
     verifyUser,
