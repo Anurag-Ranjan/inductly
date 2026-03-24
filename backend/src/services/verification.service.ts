@@ -11,7 +11,7 @@ export const generateVerificationToken = async (userId: number) => {
         data: {
             userId,
             token: hashedToken,
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60)
+            expires_at: new Date(Date.now() + 1000 * 60 * 60)
         }
     });
 
@@ -29,21 +29,26 @@ export const verifyToken = async (token: string) => {
 
     if (!tokenRecord) throw new ApiError(401, 'Invalid Token provided');
 
-    if (tokenRecord.expiresAt < new Date()) {
+    if (tokenRecord.expires_at < new Date()) {
         await prisma.verificationToken.delete({
             where: { id: tokenRecord.id }
         });
         throw new ApiError(401, 'Token has Expired');
     }
 
-    await prisma.user.update({
+    const user = await prisma.user.update({
         where: { id: tokenRecord.userId },
-        data: { isVerified: true }
+        data: { isVerified: true },
+        select: {
+            id: true,
+            name: true,
+            email: true
+        }
     });
 
     await prisma.verificationToken.delete({
         where: { id: tokenRecord.id }
     });
 
-    return tokenRecord.userId;
+    return user;
 };

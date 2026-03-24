@@ -3,32 +3,23 @@ import { ApiError } from '../utils/ApiError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../utils/prisma';
 import jwt from 'jsonwebtoken';
-
-interface AuthRequest extends Request {
-    user?: {
-        id: number;
-        email: string;
-        name: string;
-    };
-}
+import { tokenPayload } from '../types/jwt.types';
 
 export const authMiddleware = asyncHandler(
-    async (req: AuthRequest, res: Response, next: NextFunction) => {
-        const { accessToken } = req.cookies;
+    async (req, res: Response, next: NextFunction) => {
+        const accessToken = req.cookies?.accessToken;
 
-        if (!accessToken) throw new ApiError(401, 'Unauthoried acceess');
+        if (!accessToken) throw new ApiError(401, 'Unauthorized acceess');
 
         try {
-            const decoded = jwt.verify(
+            const decoded: tokenPayload = jwt.verify(
                 accessToken,
                 process.env.JWT_SECRET!
-            ) as {
-                userId: number;
-            };
+            ) as tokenPayload;
 
             const user = await prisma.user.findUnique({
                 where: {
-                    id: decoded.userId
+                    id: decoded.id
                 },
                 select: {
                     id: true,

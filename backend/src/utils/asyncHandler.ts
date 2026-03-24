@@ -1,11 +1,15 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { RequestHandler } from 'express';
 
-const asyncHandler = (fn: RequestHandler): RequestHandler => async (req: Request, res: Response, next:NextFunction) => {
-  try {
-    await fn(req, res, next);
-  } catch (error: any) {
-    next(error);
-  }
+const asyncHandler = <P = {}, ResBody = any, ReqBody = any, ReqQuery = any>(
+    fn: RequestHandler<P, ResBody, ReqBody, ReqQuery>
+): RequestHandler<P, ResBody, ReqBody, ReqQuery> => {
+    return async (req, res, next) => {
+        try {
+            await fn(req, res, next);
+        } catch (error) {
+            next(error);
+        }
+    };
 };
 
-export {asyncHandler};
+export { asyncHandler };

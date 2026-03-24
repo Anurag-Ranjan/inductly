@@ -20,6 +20,7 @@ enum MemberRole {
   VICE_PRESIDENT
   COORDINATOR
   MEMBER
+  ADMIN
 }
 
 enum ApplicationStatus {
@@ -53,6 +54,7 @@ model User {
   mobile_number     String?
   isProfileComplete Boolean                    @default(false)
   isVerified        Boolean                    @default(false)
+  isPictureUploaded Boolean                    @default(false)
   refreshToken      String?
   created_at        DateTime                   @default(now())
   updated_at        DateTime                   @updatedAt
