@@ -169,8 +169,7 @@ const onboardUser: RequestHandler = asyncHandler(async (req, res) => {
             id: true,
             name: true,
             email: true,
-            isVerified: true,
-            isProfileComplete: true
+            isVerified: true
         }
     });
 
@@ -183,23 +182,44 @@ const onboardUser: RequestHandler = asyncHandler(async (req, res) => {
 
 const updateProfile: RequestHandler = asyncHandler(async (req, res) => {
     const { id } = req.user as tokenPayload;
-
     const { gitHub, linkedIn, mobile_number } = req.body;
 
-    gitHubSchema.parse(gitHub);
-    linkedInSchema.parse(linkedIn);
-    phoneSchema.parse(mobile_number);
+    const normalize = (val?: string) => val?.trim() || undefined;
 
-    let user = await prisma.user.update({
-        where: {
-            id
-        },
-        data: {
-            github: gitHub,
-            linkedin: linkedIn,
-            mobile_number: mobile_number,
-            isProfileComplete: true
-        },
+    const cleanGithub = normalize(gitHub);
+    const cleanLinkedIn = normalize(linkedIn);
+    const cleanMobile = normalize(mobile_number);
+
+    if (cleanGithub) gitHubSchema.parse(cleanGithub);
+    if (cleanLinkedIn) linkedInSchema.parse(cleanLinkedIn);
+    if (cleanMobile) phoneSchema.parse(cleanMobile);
+
+    const existingUser = await prisma.user.findUnique({
+        where: { id },
+        select: {
+            github: true,
+            linkedin: true,
+            mobile_number: true
+        }
+    });
+
+    if (!existingUser) throw new ApiError(404, 'User not found');
+
+    const finalGithub = cleanGithub ?? existingUser.github;
+    const finalLinkedIn = cleanLinkedIn ?? existingUser.linkedin;
+    const finalMobile = cleanMobile ?? existingUser.mobile_number;
+
+    const data: any = {
+        isVerified: !!(finalGithub && finalLinkedIn && finalMobile)
+    };
+
+    if (cleanGithub !== undefined) data.github = cleanGithub;
+    if (cleanLinkedIn !== undefined) data.linkedin = cleanLinkedIn;
+    if (cleanMobile !== undefined) data.mobile_number = cleanMobile;
+
+    const updatedUser = await prisma.user.update({
+        where: { id },
+        data,
         select: {
             id: true,
             name: true,
@@ -218,11 +238,15 @@ const updateProfile: RequestHandler = asyncHandler(async (req, res) => {
         }
     });
 
-    if (!user) throw new ApiError(500, 'Internal Server Error');
-
     return res
         .status(200)
-        .json(new ApiResponse(200, { user }, 'Profile Updated Successfully'));
+        .json(
+            new ApiResponse(
+                200,
+                { updatedUser },
+                'Profile Updated Successfully'
+            )
+        );
 });
 
 const refreshAccessToken: RequestHandler = asyncHandler(async (req, res) => {

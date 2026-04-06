@@ -15,7 +15,7 @@ export const userRouter = Router();
 
 userRouter.route('/signup').post(registerUser);
 userRouter.route('/verify/:token').get(verifyUser);
-userRouter.route('login').post(loginUser);
+userRouter.route('/login').post(loginUser);
 userRouter.route('/logout').get(authMiddleware, logoutUser);
 userRouter.route('/onboard').get(authMiddleware, onboardUser);
 userRouter.route('/profile/update').get(authMiddleware, updateProfile);
