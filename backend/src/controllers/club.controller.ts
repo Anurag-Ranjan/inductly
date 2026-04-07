@@ -5,9 +5,11 @@ import { asyncHandler } from '../utils/asyncHandler';
 import {
     createClub,
     fetchAllClubs,
-    fetchClubDetails
+    fetchClubDetails,
+    updateClubDetails
 } from '../services/club.service';
 import { ClubInput, clubSchema } from '../validations/club.validation';
+import { prisma } from '../utils/prisma';
 
 const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
     if (!req.user) throw new ApiError(401, 'Unauthorised access');
@@ -51,4 +53,35 @@ const registerClub: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(201, createdClub, 'Created club successfully'));
 });
 
-export { getAllClubs, getClubDetails, registerClub };
+const updateClub: RequestHandler = asyncHandler(async (req, res) => {
+    const clubDetails: ClubInput = req.body;
+
+    const clubId = parseInt(req.params.id as string);
+
+    if (!clubId) throw new ApiError(400, 'Invalid request');
+
+    // enforce admin rules
+
+    // temp -> check role on DB
+
+    const userRole = await prisma.membership.findFirst({
+        where: {
+            club_id: clubId,
+            user_id: req.user!.id
+        }
+    });
+
+    if (!userRole) throw new ApiError(401, 'Unauthorized, not a member');
+
+    if (userRole.role != 'ADMIN') {
+        throw new ApiError(401, 'Unauthorised, not an Admin');
+    }
+
+    const updatedClub = updateClubDetails(clubDetails, clubId);
+
+    if (!updatedClub) throw new ApiError(500, 'Internal server error');
+
+    return res.status;
+});
+
+export { getAllClubs, getClubDetails, registerClub, updateClub };

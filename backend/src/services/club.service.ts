@@ -217,4 +217,42 @@ const createClub = async (data: ClubInput, creatorId: number) => {
     return club;
 };
 
-export { fetchAllClubs, fetchClubDetails, createClub };
+const updateClubDetails = async (clubDetails: ClubInput, clubId: number) => {
+    const originalClub = await prisma.club.findUnique({
+        where: {
+            id: clubId
+        }
+    });
+
+    if (!originalClub) throw new ApiError(404, 'Club not found');
+
+    const { name, description, website, instagram, logo, linkedin, formed_on } =
+        clubDetails;
+
+    const updatedName = name ?? originalClub.name;
+    const updatedDescription = description ?? originalClub.description;
+    const updatedWebsite = website ?? originalClub.website;
+    const updatedInstagram = instagram ?? originalClub.instagram;
+    const updatedLogo = logo ?? originalClub.logo;
+    const updatedLinked = linkedin ?? originalClub.linkedin;
+    const updatedFormed_on = formed_on ?? originalClub.formed_on;
+
+    const updatedClub = await prisma.club.update({
+        where: {
+            id: clubId
+        },
+        data: {
+            name: updatedName,
+            description: updatedDescription,
+            website: updatedWebsite,
+            instagram: updatedInstagram,
+            logo: updatedLogo,
+            linkedin: updatedLinked,
+            formed_on: updatedFormed_on
+        }
+    });
+
+    return updatedClub;
+};
+
+export { fetchAllClubs, fetchClubDetails, createClub, updateClubDetails };
