@@ -1,5 +1,7 @@
+import { ApiError } from '../utils/ApiError';
 import { getUserClubContext } from '../utils/getUserClubContext';
 import { prisma } from '../utils/prisma';
+import { ClubInput } from '../validations/club.validation';
 
 const fetchAllClubs = async (page: number, limit: number) => {
     const skip = (page - 1) * limit;
@@ -180,4 +182,39 @@ const fetchClubDetails = async (clubId: number, userId: number) => {
 
     return getAdminView(clubId);
 };
-export { fetchAllClubs, fetchClubDetails };
+
+const createClub = async (data: ClubInput, creatorId: number) => {
+    const existing = await prisma.club.findFirst({
+        where: {
+            name: data.name
+        }
+    });
+
+    if (existing) throw new ApiError(400, 'Club already registered');
+
+    const club = await prisma.club.create({
+        data: {
+            name: data.name,
+            description: data.name || null,
+            logo: data.logo || null,
+            website: data.website || null,
+            instagram: data.instagram || null,
+            linkedin: data.linkedin || null,
+            formed_on: data.formed_on || null
+        }
+    });
+
+    if (!club) throw new ApiError(500, 'Cannot create club');
+
+    await prisma.membership.create({
+        data: {
+            club_id: club.id,
+            user_id: creatorId,
+            role: 'ADMIN'
+        }
+    });
+
+    return club;
+};
+
+export { fetchAllClubs, fetchClubDetails, createClub };

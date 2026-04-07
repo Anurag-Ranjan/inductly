@@ -2,7 +2,12 @@ import { RequestHandler } from 'express';
 import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
-import { fetchAllClubs, fetchClubDetails } from '../services/club.service';
+import {
+    createClub,
+    fetchAllClubs,
+    fetchClubDetails
+} from '../services/club.service';
+import { ClubInput, clubSchema } from '../validations/club.validation';
 
 const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
     if (!req.user) throw new ApiError(401, 'Unauthorised access');
@@ -32,4 +37,18 @@ const getClubDetails: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, club, 'Club details fetched successfully'));
 });
 
-export { getAllClubs, getClubDetails };
+const registerClub: RequestHandler = asyncHandler(async (req, res) => {
+    const clubDetails: ClubInput = req.body;
+
+    clubSchema.parse(clubDetails);
+
+    const createdClub = await createClub(clubDetails, req.user!.id);
+
+    if (!createdClub) throw new ApiError(500, 'Cannot create club');
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, createdClub, 'Created club successfully'));
+});
+
+export { getAllClubs, getClubDetails, registerClub };
