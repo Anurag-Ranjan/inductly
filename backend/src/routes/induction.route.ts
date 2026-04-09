@@ -1,6 +1,12 @@
 import { Router } from 'express';
-import { getInductions } from '../controllers/induction.controller';
+import {
+    createInduction,
+    getInductionDetails,
+    getInductions
+} from '../controllers/induction.controller';
 
 export const inductionRouter = Router();
 
-inductionRouter.route('/:club').get(getInductions);
+inductionRouter.route('/').get(getInductions);
+inductionRouter.route('/:id').get(getInductionDetails);
+inductionRouter.route('/').post(createInduction);

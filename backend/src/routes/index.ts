@@ -11,6 +11,6 @@ router.use('/health', healthRouter);
 router.use('/user', userRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/clubs', clubRouter);
-router.use('/inductions', inductionRouter);
+router.use('/clubs/:clubId/inductions', inductionRouter);
 
 export default router;
