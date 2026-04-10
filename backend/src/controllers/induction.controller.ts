@@ -5,9 +5,13 @@ import { prisma } from '../utils/prisma';
 import { RequestHandler } from 'express';
 import {
     fetchInductionDetails,
-    fetchInductions
+    fetchInductions,
+    updateInductionDates
 } from '../services/induction.service';
-import { createInductionSchema } from '../validations/induction.validation';
+import {
+    createInductionSchema,
+    updateInductionSchema
+} from '../validations/induction.validation';
 
 const getInductions: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -32,6 +36,8 @@ const getInductions: RequestHandler = asyncHandler(async (req, res) => {
             )
         );
 });
+
+// getInduction details for an applicant should also return the president of the club and email of admins
 
 const getInductionDetails: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -109,6 +115,56 @@ const createInduction: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
-// getInduction details for an applicant should also return the president of the club and email of admins
+const publishInduction: RequestHandler = asyncHandler(async (req, res) => {
+    //admin check
+    // check if previous steps are done, i.e. stages done, form done
+    const user = req.user;
 
-export { getInductions, getInductionDetails, createInduction };
+    if (!user) throw new ApiError(401, 'Unauthorised');
+
+    const clubId = parseInt(req.params.clubId as string);
+
+    const inductionId = parseInt(req.params.id as string);
+
+    if (!clubId || !inductionId) throw new ApiError(400, 'Missing Fields');
+
+    const role = await prisma.membership.findUnique({
+        where: {
+            user_id_club_id: {
+                user_id: user?.id,
+                club_id: clubId
+            }
+        }
+    });
+
+    if (!role || role?.role != 'ADMIN') throw new ApiError(403, 'Forbidden');
+
+    const { opened_on, closing_on } = updateInductionSchema.parse(req.body);
+
+    if (!opened_on || !closing_on) throw new ApiError(400, 'Missing fields');
+
+    const publishedInduction = await updateInductionDates(
+        inductionId,
+        opened_on,
+        closing_on
+    );
+
+    if (!publishedInduction) throw new ApiError(500, 'Internal Server Error');
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                publishedInduction,
+                'Induction published successfully'
+            )
+        );
+});
+
+export {
+    getInductions,
+    getInductionDetails,
+    createInduction,
+    publishInduction
+};

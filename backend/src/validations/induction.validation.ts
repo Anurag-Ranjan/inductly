@@ -18,3 +18,17 @@ export const createInductionSchema = z
         ...data,
         description: data.description === '' ? null : data.description
     }));
+
+export const updateInductionSchema = z
+    .object({
+        opened_on: z.iso.datetime(),
+        closing_on: z.iso.datetime()
+    })
+    .transform((data) => ({
+        opened_on: new Date(data.opened_on),
+        closing_on: new Date(data.closing_on)
+    }))
+    .refine((data) => data.closing_on > data.opened_on, {
+        message: 'Closing date must be after opening date',
+        path: ['closing_on']
+    });

@@ -151,4 +151,56 @@ const fetchInductionDetails = async (
     return getAdminInductionDetails(inductionId);
 };
 
-export { fetchInductions, fetchInductionDetails };
+const updateInductionDates = async (
+    inductionId: number,
+    opened_on: Date,
+    closing_on: Date
+) => {
+    // I also need to implement this as a single transaction because when traffic would increase, then there is a potential risk of deletion before upfation by someone, a read followed by a write dependency exists
+
+    const induction = await prisma.induction.findUnique({
+        where: {
+            id: inductionId
+        },
+        select: {
+            forms: {
+                select: {
+                    id: true
+                }
+            },
+            stages: {
+                select: {
+                    id: true
+                }
+            }
+        }
+    });
+
+    if (!induction) throw new ApiError(404, 'Induction not found');
+
+    if (induction.forms.length === 0 || induction.stages.length === 0)
+        throw new ApiError(400, 'Induction is not complete');
+
+    const publishedInduction = await prisma.induction.update({
+        where: {
+            id: inductionId
+        },
+        data: {
+            opened_on,
+            closing_on
+        },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            opened_on: true,
+            closing_on: true
+        }
+    });
+
+    if (!publishedInduction) throw new ApiError(500, 'Internal Database Error');
+
+    return publishedInduction;
+};
+
+export { fetchInductions, fetchInductionDetails, updateInductionDates };
