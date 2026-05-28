@@ -30,7 +30,7 @@ const getClubDetails: RequestHandler = asyncHandler(async (req, res) => {
 
     if (!clubId || !userId) throw new ApiError(401, 'Unauthorised Request');
 
-    const club = fetchClubDetails(clubId, userId);
+    const club = await fetchClubDetails(clubId, userId);
 
     if (!club) throw new ApiError(404, 'Club not found');
 
