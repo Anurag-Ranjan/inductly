@@ -3,8 +3,8 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { RequestHandler, Response } from "express";
 import { UserRole } from "../types/roles.types";
-import { createStage, fetchInductionStages } from "../services/stage.service";
-import { createStageSchema } from "../validations/stage.validation";
+import { createStage, fetchInductionStages, updateStage } from "../services/stage.service";
+import { createStageSchema, updateStageSchema } from "../validations/stage.validation";
 
 const getAllStages: RequestHandler = asyncHandler(async (req, res: Response ) => {
     const inductionId = Number(req.params.inductionId);
@@ -56,4 +56,47 @@ const createInductionStage: RequestHandler = asyncHandler(async(req, res) => {
 
 });
 
-export {getAllStages, createInductionStage};
+const updateInductionStage: RequestHandler = asyncHandler(async(req, res) => {
+    const user = req.user;
+
+    if (!user) {
+        throw new ApiError(401, "Unauthenticated");
+    }
+
+    const role = req.role;
+
+    if (!role) {
+        throw new ApiError(403, "Unauthorized");
+    }
+
+    const inductionId = Number(req.params.inductionId);
+    const stageId = Number(req.params.stageId);
+
+    if (!inductionId || isNaN(inductionId)) {
+        throw new ApiError(400, "Invalid induction id");
+    }
+
+    if (!stageId || isNaN(stageId)) {
+        throw new ApiError(400, "Invalid stage id");
+    }
+
+    const parsedData = updateStageSchema.parse(req.body);
+
+    const updatedStage = await updateStage({
+        inductionId,
+        stageId,
+        role,
+        payload: parsedData
+    });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            updatedStage,
+            "Stage updated successfully"
+        )
+    );
+
+})
+
+export {getAllStages, createInductionStage, updateInductionStage};

@@ -5,13 +5,23 @@ import { UserRole } from "../types/roles.types";
 
 type CreateStagePayload = {
     inductionId: number;
-    role: UserRole,
+    role: UserRole;
     userId: number;
     payload: {
         name: string;
         description?: string|null|undefined;
     };
 };
+
+type UpdateStagePayload = {
+    inductionId: number;
+    stageId:number;
+    role: UserRole;
+    payload:{
+        name: string,
+        description?: string|null|undefined
+    };
+}
 
 const fetchInductionStages = async(inductionId: number) => {
     const induction = await prisma.induction.findUnique({
@@ -106,4 +116,49 @@ const createStage = async({
 
 }
 
-export {fetchInductionStages, createStage};
+const updateStage = async ({
+    inductionId,
+    stageId,
+    role,
+    payload
+}: UpdateStagePayload) => {
+
+    const allowedRoles = [
+        UserRole.ADMIN,
+    ];
+
+    if (!allowedRoles.includes(role)) {
+        throw new ApiError(403, "Forbidden");
+    }
+
+    const existingStage = await prisma.inductionStage.findFirst({
+        where: {
+            id: stageId,
+            induction_id: inductionId
+        }
+    });
+
+    if (!existingStage) {
+        throw new ApiError(
+            404,
+            "Stage not found for this induction"
+        );
+    }
+
+    if(payload.description === undefined) payload.description = null;
+
+    const updatedStage = await prisma.inductionStage.update({
+        where: {
+            id: stageId
+        },
+        data: {
+            name: payload.name,
+            description: payload.description,
+            updated_at: Date(),
+        }
+    });
+
+    return updatedStage;
+};
+
+export {fetchInductionStages, createStage, updateStage};
