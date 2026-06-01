@@ -1,9 +1,9 @@
 import { clubRouter } from './club.route';
-import { dashboardRouter } from './dashboard.routes';
-import { healthRouter } from './health.routes';
+import { dashboardRouter } from './dashboard.route';
+import { healthRouter } from './health.route';
 import { inductionRouter } from './induction.route';
-import { stageRouter } from './stage.routes';
-import { userRouter } from './user.routes';
+import { stageRouter } from './stage.route';
+import { userRouter } from './user.route';
 import { formRouter } from './form.route';
 import { Router } from 'express';
 
