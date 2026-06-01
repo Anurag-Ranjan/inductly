@@ -36,6 +36,15 @@ enum StageStatus {
   FAILED
 }
 
+enum QuestionType {
+  TEXT
+  TEXTAREA
+  SELECT
+  MULTI_SELECT
+  CHECKBOX
+  FILE
+}
+
 // ─────────────────────────────────────────────
 // User & Auth
 // ─────────────────────────────────────────────
@@ -222,6 +231,7 @@ model Form {
   title        String
   description  String?
   created_at   DateTime @default(now())
+  isPublished Boolean
 
   induction Induction      @relation(fields: [induction_id], references: [id], onDelete: Cascade)
   questions FormQuestion[]
@@ -234,8 +244,7 @@ model FormQuestion {
   id            Int      @id @default(autoincrement())
   form_id       Int
   question_text String
-  // e.g. "text" | "textarea" | "select" | "multi_select" | "checkbox" | "file"
-  question_type String
+  question_type QuestionType
   order_index   Int
   // Stores options for select/multi_select, validation rules, etc.
   metadata      Json?
@@ -267,7 +276,6 @@ model FormAnswer {
   id          Int  @id @default(autoincrement())
   response_id Int
   question_id Int
-  // Json to handle all answer types: plain text, arrays (multi-select), file URLs
   answer      Json
 
   response FormResponse @relation(fields: [response_id], references: [id], onDelete: Cascade)

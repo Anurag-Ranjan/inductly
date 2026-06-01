@@ -5,10 +5,12 @@ import {
     getInductions,
     publishInduction
 } from '../controllers/induction.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { authorizeClubRole } from '../middlewares/role.middleware';
 
 export const inductionRouter = Router();
 
-inductionRouter.route('/').get(getInductions);
-inductionRouter.route('/:id').get(getInductionDetails);
-inductionRouter.route('/').post(createInduction);
-inductionRouter.route('/:id').patch(publishInduction);
+inductionRouter.route('/').get(authMiddleware, getInductions);
+inductionRouter.route('/:id').get(authMiddleware, getInductionDetails);
+inductionRouter.route('/').post(authMiddleware, authorizeClubRole, createInduction);
+inductionRouter.route('/:id').patch(authMiddleware, authorizeClubRole ,publishInduction);

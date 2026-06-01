@@ -1,0 +1,30 @@
+Phase 1: Form Creation
+
+POST /forms
+Create form + questions in a transaction
+Validate question types
+Validate metadata
+
+Phase 2: Form Retrieval
+
+GET /forms/:id
+Return form with ordered questions
+
+Phase 3: Form Submission
+
+POST /applications/:applicationId/responses
+Validate application ownership
+Validate answers against question definitions
+Create response + answers in a transaction
+
+Phase 4: Application Review
+GET application details
+Include:
+user
+form responses
+answers
+stage progress
+
+Phase 5: File Upload Support
+Upload endpoint
+Store URL and metadata in answer JSON
