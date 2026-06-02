@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { createForm, submitForm } from '../controllers/form.controller';
+import {
+    createForm,
+    publishForm,
+    submitForm,
+    getFormIndormation
+} from '../controllers/form.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
 
@@ -13,5 +18,11 @@ formRouter
 formRouter
     .route('/:formId/applications/:applicationId')
     .post(authMiddleware, authorizeClubRole, submitForm);
+formRouter
+    .route('/:formId/publish')
+    .post(authMiddleware, authorizeClubRole, publishForm);
+formRouter
+    .route('/:formId')
+    .get(authMiddleware, authorizeClubRole, getFormIndormation);
 
 export { formRouter };

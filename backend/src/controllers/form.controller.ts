@@ -9,8 +9,11 @@ import {
 import {
     createFormService,
     createQuestionService,
+    getFormInformationService,
+    publishFormService,
     submitFormService
 } from '../services/form.service';
+import { UserRole } from '../types/roles.types';
 
 const createForm: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -93,4 +96,55 @@ const submitForm: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
-export { createForm, createQuestion, submitForm };
+const publishForm: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+    if (!role || role != UserRole.ADMIN)
+        throw new ApiError(403, 'Unauthorised');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const clubId = Number(req.params.clubId);
+    if (!formId || isNaN(clubId)) throw new ApiError(400, 'Invalid club id');
+
+    const publishedForm = await publishFormService(formId, clubId);
+
+    if (!publishedForm) throw new ApiError(500, 'Internal Server Error');
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, publishedForm, 'Form published successfully')
+        );
+});
+
+const getFormIndormation: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(401, 'Invalid form id');
+
+    const clubId = Number(req.params.clubId);
+    if (!clubId || isNaN(clubId)) throw new ApiError(401, 'Invalid club id');
+
+    const form = await getFormInformationService(formId, clubId);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, form, 'Form fetched suceesfully'));
+});
+
+const updateForm: RequestHandler = asyncHandler(async (req, res) => {});
+
+const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {});
+
+export {
+    createForm,
+    createQuestion,
+    submitForm,
+    publishForm,
+    getFormIndormation,
+    updateForm,
+    getFormResponse
+};

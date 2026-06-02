@@ -108,4 +108,67 @@ const submitFormService = async (params: answerParams) => {
     return response;
 };
 
-export { createFormService, createQuestionService, submitFormService };
+const publishFormService = async (formId: number, clubId: number) => {
+    const form = await prisma.form.findUnique({
+        where: { id: formId },
+        include: { questions: true }
+    });
+
+    if (!form) {
+        throw new ApiError(404, 'Form not found');
+    }
+
+    if (form.questions.length === 0)
+        throw new ApiError(400, 'Cannot publish an enpty form');
+
+    if (form.isPublished) {
+        throw new ApiError(400, 'Form already published');
+    }
+
+    const induction = await prisma.induction.findUnique({
+        where: {
+            id: form.induction_id
+        }
+    });
+
+    if (!induction) throw new ApiError(404, 'Induction not found');
+
+    if (induction.club_id !== clubId) throw new ApiError(403, 'Unauthorised');
+
+    const publishedInduction = await prisma.form.update({
+        where: {
+            id: form.id
+        },
+        data: {
+            isPublished: true
+        }
+    });
+
+    return publishedInduction;
+};
+
+const getFormInformationService = async (formId: number, clubId: number) => {
+    const form = await prisma.form.findUnique({
+        where: {
+            id: formId
+        },
+        include: {
+            questions: {
+                orderBy: {
+                    order_index: 'asc'
+                }
+            }
+        }
+    });
+
+    if (!form) throw new ApiError(404, 'Form not found');
+    return form;
+};
+
+export {
+    createFormService,
+    createQuestionService,
+    submitFormService,
+    publishFormService,
+    getFormInformationService
+};

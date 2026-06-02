@@ -15,6 +15,6 @@ router.use('/dashboard', dashboardRouter);
 router.use('/clubs', clubRouter);
 router.use('/clubs/:clubId/inductions', inductionRouter);
 router.use('/clubs/:clubId/inductions/:inductionId/stages', stageRouter);
-router.use('/inductions/:inductionId/form', formRouter);
+router.use('clubs/:clubId/inductions/:inductionId/form', formRouter);
 
 export default router;
