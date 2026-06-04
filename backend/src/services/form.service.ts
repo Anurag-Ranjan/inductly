@@ -165,6 +165,10 @@ const getFormInformationService = async (formId: number, clubId: number) => {
     return form;
 };
 
+// const getFormResponseService = async (formId:number, applicationId: number, inductionId: number) => {
+//     const response = await prisma.formResponse.findUnique();
+// }
+
 export {
     createFormService,
     createQuestionService,

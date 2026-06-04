@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler';
 import { ApiResponse } from '../utils/ApiResponse';
 import { ApiError } from '../utils/ApiError';
-import { RequestHandler } from 'express';
+import { RequestHandler, response } from 'express';
 import {
     createQuestionSchema,
     formSchema
@@ -135,9 +135,18 @@ const getFormIndormation: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, form, 'Form fetched suceesfully'));
 });
 
-const updateForm: RequestHandler = asyncHandler(async (req, res) => {});
+// const updateForm: RequestHandler = asyncHandler(async (req, res) => {
 
-const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {});
+// });
+
+const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unathenticated');
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    // const response = await getFormResponseService();
+});
 
 export {
     createForm,
@@ -145,6 +154,6 @@ export {
     submitForm,
     publishForm,
     getFormIndormation,
-    updateForm,
+    // updateForm,
     getFormResponse
 };

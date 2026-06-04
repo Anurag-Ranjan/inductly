@@ -28,3 +28,91 @@ stage progress
 Phase 5: File Upload Support
 Upload endpoint
 Store URL and metadata in answer JSON
+
+Forntend Dependencies:
+
+npm install react-router-dom
+npm install @reduxjs/toolkit react-redux
+npm install @tanstack/react-query
+npm install react-hook-form
+npm install zod
+npm install @hookform/resolvers
+npm install lucide-react
+npm install clsx
+npm install tailwind-merge
+npm install class-variance-authority
+npm install sonner
+npm install date-fns
+
+Shadcn
+
+npx shadcn@latest init
+
+npx shadcn@latest add button
+npx shadcn@latest add input
+npx shadcn@latest add form
+npx shadcn@latest add card
+npx shadcn@latest add dialog
+npx shadcn@latest add drawer
+npx shadcn@latest add dropdown-menu
+npx shadcn@latest add sheet
+npx shadcn@latest add select
+npx shadcn@latest add textarea
+npx shadcn@latest add avatar
+npx shadcn@latest add badge
+npx shadcn@latest add tabs
+npx shadcn@latest add table
+npx shadcn@latest add skeleton
+npx shadcn@latest add toast
+npx shadcn@latest add alert-dialog
+npx shadcn@latest add pagination
+npx shadcn@latest add separator
+npx shadcn@latest add command
+npx shadcn@latest add popover
+npx shadcn@latest add tooltip
+npx shadcn@latest add progress
+npx shadcn@latest add breadcrumb
+
+Dev Dependencies
+npm install -D eslint
+npm install -D prettier
+npm install -D eslint-config-prettier
+npm install -D eslint-plugin-react-hooks
+npm install -D eslint-plugin-react-refresh
+
+src/
+├── app/
+│   ├── store/
+│   ├── router/
+│   └── providers/
+│
+├── features/
+│   ├── auth/
+│   ├── dashboard/
+│   ├── clubs/
+│   ├── inductions/
+│   ├── applications/
+│   └── profile/
+│
+├── components/
+│   ├── ui/
+│   ├── shared/
+│   └── layouts/
+│
+├── services/
+├── hooks/
+├── lib/
+├── types/
+└── pages/
+
+Rtk
+
+npm install @reduxjs/toolkit react-redux
+
+store/
+├── authSlice.ts
+├── uiSlice.ts
+├── notificationSlice.ts
+├── clubSlice.ts
+├── applicationSlice.ts
+└── store.ts

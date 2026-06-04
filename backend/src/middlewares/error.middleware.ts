@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError';
 import { ZodError } from 'zod';
 
 const errorMiddleware = (
-    err: Error | ApiError,
+    err: any,
     req: Request,
     res: Response,
     next: NextFunction
@@ -11,6 +11,7 @@ const errorMiddleware = (
     let statusCode = 500;
     let message = 'Internal Server Error';
     let errors: any[] = [];
+    console.log('Yahaan tak aa raha');
 
     if (err instanceof ApiError) {
         statusCode = err.statusCode;
@@ -35,7 +36,9 @@ const errorMiddleware = (
         stack: err.stack
     });
 
-    res.status(statusCode).json({
+    console.log('Yahaan tak bhi aa raha');
+
+    return res.status(statusCode).json({
         success: false,
         message,
         errors,

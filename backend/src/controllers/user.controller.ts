@@ -44,6 +44,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     if (user === null) throw new ApiError(500, 'Internal Server Error');
 
     const verificationLink = await generateVerificationToken(user.id);
+    console.log(verificationLink);
 
     if (!verificationLink)
         throw new ApiError(500, 'Error creating the verification link');
@@ -52,7 +53,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 
     return res
         .status(201)
-        .json(new ApiResponse(201, { user }, 'User created successfully'));
+        .json(new ApiResponse(201, user, 'User created successfully'));
 });
 
 const verifyUser: RequestHandler<{ token: string }> = asyncHandler(

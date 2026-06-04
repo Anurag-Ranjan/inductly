@@ -4,6 +4,7 @@ import { createVerificationToken, hashToken } from '../utils/verification';
 
 export const generateVerificationToken = async (userId: number) => {
     const { token, hashedToken } = await createVerificationToken();
+    console.log(process.env.FRONTEND_BASE_URL);
 
     const link = `${process.env.FRONTEND_BASE_URL}/verify-email?token=${token}`;
 
@@ -19,8 +20,9 @@ export const generateVerificationToken = async (userId: number) => {
 };
 
 export const verifyToken = async (token: string) => {
+    console.log(token);
     const hashedToken = hashToken(token);
-
+    console.log(hashedToken);
     const tokenRecord = await prisma.verificationToken.findUnique({
         where: {
             token: hashedToken
