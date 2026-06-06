@@ -112,7 +112,7 @@ function RightPanel() {
 				</div>
 
 				{/* Illustration image */}
-				<div className="mt-16 relative">
+				{/* <div className="mt-16 relative">
 					<img
 						ref={imgRef}
 						src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuoRuCJlEggNiEqkMDOeUw8wv_rKIFjsJtLgKQsUPPeVe25HECHsjMwUbUyEt-6flYP8F8MAi6p-VSIDvuQSXTZIlIkOOReNTDbaGICuD-cQ_t1kuEPc6DTPbLaMvESoTdyGV16DcWg0MOaR7yE3dhq9xoHA-FEyw2ZK2MbxuwvJYxYkVMarH5x613qImGA1McJ5HrEOSR1KXvaawqV868vuE5fzm5a-LRvQGnetNLgCCG5Ya2xRg2DYaRICu1w4NHM7xyK_tuTPrJ"
@@ -120,7 +120,7 @@ function RightPanel() {
 						className="rounded-2xl shadow-2xl border-4 border-white/10 w-full"
 						style={{ willChange: "transform" }}
 					/>
-				</div>
+				</div> */}
 			</div>
 		</section>
 	);

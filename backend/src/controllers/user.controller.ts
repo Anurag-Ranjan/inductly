@@ -23,6 +23,7 @@ import {
     linkedInSchema,
     phoneSchema
 } from '../validations/profile.validations';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const data = registerSchema.parse(req.body);
@@ -44,7 +45,6 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     if (user === null) throw new ApiError(500, 'Internal Server Error');
 
     const verificationLink = await generateVerificationToken(user.id);
-    console.log(verificationLink);
 
     if (!verificationLink)
         throw new ApiError(500, 'Error creating the verification link');
@@ -66,18 +66,18 @@ const verifyUser: RequestHandler<{ token: string }> = asyncHandler(
             throw new ApiError(400, 'Invalid or Expired token');
         }
 
-        const refreshToken = generateRefreshToken(user);
-        const accessToken = generateAccessToken(user);
+        // const refreshToken = generateRefreshToken(user);
+        // const accessToken = generateAccessToken(user);
 
-        res.cookie('accessToken', accessToken, accessTokenCookieOptions);
-        res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
+        // res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+        // res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
         return res
             .status(200)
             .json(
                 new ApiResponse(
                     200,
-                    { user, isProfileComplete: false },
+                    { ...user, isProfileComplete: false },
                     'Email Verified successfully'
                 )
             );
@@ -123,7 +123,10 @@ const loginUser: RequestHandler = asyncHandler(async (req, res) => {
             name: true,
             email: true,
             isVerified: true,
-            isProfileComplete: true
+            isProfileComplete: true,
+            profile_picture: true,
+            isOnboarded: true,
+            isPictureUploaded: true
         }
     });
 
@@ -132,7 +135,7 @@ const loginUser: RequestHandler = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, { updatedUser }, 'Logged in successfully'));
+        .json(new ApiResponse(200, updatedUser, 'Logged in successfully'));
 });
 
 const logoutUser: RequestHandler = asyncHandler(async (req, res) => {
@@ -164,7 +167,8 @@ const onboardUser: RequestHandler = asyncHandler(async (req, res) => {
         },
         data: {
             branch,
-            batch
+            batch,
+            isOnboarded: true
         },
         select: {
             id: true,
@@ -178,7 +182,7 @@ const onboardUser: RequestHandler = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, { user }, 'Onboarding done successfully'));
+        .json(new ApiResponse(200, null, 'Onboarding done successfully'));
 });
 
 const updateProfile: RequestHandler = asyncHandler(async (req, res) => {
@@ -252,21 +256,15 @@ const updateProfile: RequestHandler = asyncHandler(async (req, res) => {
 
 const refreshAccessToken: RequestHandler = asyncHandler(async (req, res) => {
     const { refreshToken } = req.cookies;
-    const { id } = req.body;
 
     if (!refreshToken) throw new ApiError(401, 'Unauthorized access');
 
-    const user = await prisma.user.findUnique({
-        where: {
-            id
-        }
-    });
+    const user: tokenPayload = jwt.verify(
+        refreshToken,
+        process.env.JWT_SECRET!
+    ) as tokenPayload;
 
-    if (!user) throw new ApiError(500, 'Internal Server Error');
-
-    const isValidToken = verifyPass(refreshToken, user?.refreshToken!);
-
-    if (!isValidToken) throw new ApiError(401, 'Invalid token provided');
+    if (!user) throw new ApiError(401, 'Invalid Token');
 
     const payload: tokenPayload = {
         id: user.id,
@@ -278,12 +276,22 @@ const refreshAccessToken: RequestHandler = asyncHandler(async (req, res) => {
     const newRefreshToken = await generateRefreshToken(payload);
     const hashedRefreshToken = await hasher(refreshToken);
 
-    await prisma.user.update({
+    const result = await prisma.user.update({
         where: {
-            id
+            id: user.id
         },
         data: {
             refreshToken: hashedRefreshToken
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            isVerified: true,
+            isProfileComplete: true,
+            profile_picture: true,
+            isOnboarded: true,
+            isPictureUploaded: true
         }
     });
 
@@ -292,7 +300,7 @@ const refreshAccessToken: RequestHandler = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, 'Token refreshed successfully'));
+        .json(new ApiResponse(200, result, 'Token refreshed successfully'));
 });
 
 const getUserProfile: RequestHandler = asyncHandler(async (req, res) => {

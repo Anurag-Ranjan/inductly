@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import { verifyTokenApi } from "../../../features/auth/api/authApi";
+import { useNavigate } from "react-router";
+import Loader from "../../../components/loaders/Loader";
+import { handleverifyToken } from "../../../features/auth/services/authServices";
+import { useDispatch } from "react-redux";
 
 function VerifyToken() {
 	const [searchParams] = useSearchParams();
+	const dispatch = useDispatch();
 	const token: string = searchParams.get("token")!;
-	const [loading, setLoading] = useState(false);
+	const navigate = useNavigate();
 	useEffect(() => {
-		setLoading(true);
-		Promise.resolve(verifyTokenApi({ token })).then(() => setLoading(false));
+		Promise.resolve(handleverifyToken(dispatch, navigate, { token }));
 	});
-	return loading ? (
-		<h1>Verifying Token......</h1>
-	) : (
-		<div>
-			<h1>Token verified, please sign in</h1>
-		</div>
-	);
+	return <Loader />;
 }
 
 export default VerifyToken;

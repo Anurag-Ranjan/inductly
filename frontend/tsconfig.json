@@ -5,6 +5,7 @@
 		{ "path": "./tsconfig.node.json" }
 	],
 	"compilerOptions": {
-		"noUncheckedSideEffectImports": false
+		"noUncheckedSideEffectImports": false,
+		"erasableSyntaxOnly": true
 	}
 }

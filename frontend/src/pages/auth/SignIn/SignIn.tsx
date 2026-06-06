@@ -1,22 +1,8 @@
-import { useState, useEffect } from "react";
-import LeftPanel from "../LeftPanel/LeftPanel";
+import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { handleUserLogin } from "../../../features/auth/services/authServices";
 import { useNavigate } from "react-router";
-import { handleUserSignUp } from "../../../features/auth/services/authServices";
-import Loader from "../../../components/loaders/Loader";
-
-function IconFill({ name, className = "" }) {
-	return (
-		<span
-			className={`material-symbols-outlined ${className}`}
-			style={{
-				fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24",
-			}}
-		>
-			{name}
-		</span>
-	);
-}
+import { setLoading } from "../../../features/auth/authSlice";
 
 function Icon({ name, className = "" }) {
 	return (
@@ -31,23 +17,28 @@ function Icon({ name, className = "" }) {
 	);
 }
 
-export default function SignUp() {
-	const [showPassword, setShowPassword] = useState(false);
-	const dispatch = useDispatch();
-	const loading = useSelector((state) => state.auth.loading);
+function IconFill({ name, className = "" }) {
+	return (
+		<span
+			className={`material-symbols-outlined ${className}`}
+			style={{
+				fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24",
+			}}
+		>
+			{name}
+		</span>
+	);
+}
 
-	const [username, setUsername] = useState("");
+export default function SignIn() {
+	const [showPassword, setShowPassword] = useState(false);
+	const imgRef = useRef(null);
+
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
-
-	const handleClick = async (e: any) => {
-		handleUserSignUp(dispatch, { name: username, email, password });
-		setEmail("");
-		setUsername("");
-		setPassword("");
-		setShowPassword(false);
-	};
+	const loading = useSelector((state) => state.auth.loading);
 
 	useEffect(() => {
 		const link = document.createElement("link");
@@ -57,12 +48,97 @@ export default function SignUp() {
 		document.head.appendChild(link);
 	}, []);
 
+	const handleMouseMove = (e) => {
+		if (!imgRef.current) return;
+		const xAxis = (window.innerWidth / 4 - e.pageX) / 50;
+		const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+		imgRef.current.style.transition = "none";
+		imgRef.current.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+	};
+
+	const handleMouseLeave = () => {
+		if (!imgRef.current) return;
+		imgRef.current.style.transition = "all 0.5s ease";
+		imgRef.current.style.transform = "rotateY(0deg) rotateX(0deg)";
+	};
+
 	return (
-		<div className="min-h-screen lg:w-full md:w-full flex flex-col md:flex-row bg-white text-gray-900 font-sans overflow-x-hidden">
-			{loading && <Loader />}
+		<div className="min-h-screen flex flex-col md:flex-row bg-white text-gray-900 font-sans overflow-x-hidden">
 			{/* ── LEFT PANEL ── */}
-			<LeftPanel />
-			{/* ── RIGHT PANEL: SIGN UP FORM ── */}
+			<section
+				onMouseMove={handleMouseMove}
+				onMouseLeave={handleMouseLeave}
+				className="hidden md:flex w-1/2 relative overflow-hidden bg-indigo-600 items-center justify-center p-16"
+			>
+				{/* Dot-grid pattern */}
+				<div
+					className="absolute inset-0 opacity-20 pointer-events-none"
+					style={{
+						backgroundImage:
+							"radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+						backgroundSize: "40px 40px",
+					}}
+				/>
+
+				<div className="relative z-10 w-full max-w-xl">
+					{/* Branding */}
+					<div className="flex items-center gap-2 mb-16">
+						<div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+							<IconFill name="school" className="text-indigo-600 font-bold" />
+						</div>
+						<span className="text-2xl font-bold text-white tracking-tight">
+							Inductly
+						</span>
+					</div>
+
+					{/* Headline */}
+					<h1 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">
+						Welcome back. <br /> Your clubs are waiting.
+					</h1>
+					<p className="text-lg text-indigo-100 opacity-90 mb-16 leading-relaxed">
+						Sign in to manage your inductions, track applications, and stay
+						connected with your campus community.
+					</p>
+
+					{/* Feature bento grid */}
+					<div className="grid grid-cols-2 gap-4">
+						<div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+							<Icon name="track_changes" className="text-white mb-2 block" />
+							<h4 className="text-sm font-medium text-white mb-1">
+								Track Applications
+							</h4>
+							<p className="text-xs text-white/70 leading-relaxed">
+								Stay updated on every stage of your induction.
+							</p>
+						</div>
+						<div className="p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+							<Icon
+								name="notifications_active"
+								className="text-white mb-2 block"
+							/>
+							<h4 className="text-sm font-medium text-white mb-1">
+								Live Notifications
+							</h4>
+							<p className="text-xs text-white/70 leading-relaxed">
+								Never miss an interview or result update.
+							</p>
+						</div>
+					</div>
+
+					{/* Illustration image */}
+					{/* <div className="mt-16 relative">
+						<img
+							ref={imgRef}
+							src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuoRuCJlEggNiEqkMDOeUw8wv_rKIFjsJtLgKQsUPPeVe25HECHsjMwUbUyEt-6flYP8F8MAi6p-VSIDvuQSXTZIlIkOOReNTDbaGICuD-cQ_t1kuEPc6DTPbLaMvESoTdyGV16DcWg0MOaR7yE3dhq9xoHA-FEyw2ZK2MbxuwvJYxYkVMarH5x613qImGA1McJ5HrEOSR1KXvaawqV868vuE5fzm5a-LRvQGnetNLgCCG5Ya2xRg2DYaRICu1w4NHM7xyK_tuTPrJ"
+							alt="Students collaborating"
+							className="rounded-2xl shadow-2xl border-4 border-white/10 w-full"
+							style={{ willChange: "transform" }}
+						/>
+					</div> */}
+				</div>
+			</section>
+
+			{/* ── RIGHT PANEL: LOGIN FORM ── */}
 			<section className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-16 bg-white">
 				<div className="w-full max-w-md">
 					{/* Mobile branding */}
@@ -73,11 +149,11 @@ export default function SignUp() {
 
 					{/* Header */}
 					<div className="mb-8">
-						<h2 className="text-2xl w-full font-semibold text-gray-900 tracking-tight mb-1">
-							Create an account
+						<h2 className="text-2xl font-semibold text-gray-900 tracking-tight mb-1">
+							Sign in to your account
 						</h2>
 						<p className="text-base text-gray-500">
-							Join the future of student organization management.
+							Welcome back! Enter your credentials to continue.
 						</p>
 					</div>
 
@@ -115,30 +191,6 @@ export default function SignUp() {
 
 					{/* Form */}
 					<form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-						{/* Full Name */}
-						<div className="space-y-1">
-							<label
-								htmlFor="full_name"
-								className="block text-sm font-medium text-gray-800"
-							>
-								Full Name
-							</label>
-							<div className="relative group">
-								<Icon
-									name="person"
-									className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors text-xl pointer-events-none"
-								/>
-								<input
-									id="full_name"
-									type="text"
-									placeholder="Enter your full name"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
-									className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-gray-400"
-								/>
-							</div>
-						</div>
-
 						{/* Email */}
 						<div className="space-y-1">
 							<label
@@ -165,12 +217,20 @@ export default function SignUp() {
 
 						{/* Password */}
 						<div className="space-y-1">
-							<label
-								htmlFor="password"
-								className="block text-sm font-medium text-gray-800"
-							>
-								Password
-							</label>
+							<div className="flex items-center justify-between">
+								<label
+									htmlFor="password"
+									className="block text-sm font-medium text-gray-800"
+								>
+									Password
+								</label>
+								<a
+									href="#"
+									className="text-xs font-medium text-indigo-600 hover:underline transition-colors"
+								>
+									Forgot password?
+								</a>
+							</div>
 							<div className="relative group">
 								<Icon
 									name="lock"
@@ -179,7 +239,7 @@ export default function SignUp() {
 								<input
 									id="password"
 									type={showPassword ? "text" : "password"}
-									placeholder="Create a secure password"
+									placeholder="Enter your password"
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
 									className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-gray-400"
@@ -196,21 +256,26 @@ export default function SignUp() {
 									/>
 								</button>
 							</div>
-							<p className="text-xs text-gray-400">
-								Must be at least 8 characters long.
-							</p>
 						</div>
 
 						{/* Submit */}
 						<button
+							disabled={loading}
 							type="submit"
-							className="w-full cursor-pointer flex items-center justify-center gap-2 py-3 px-6 text-white text-sm font-medium rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all"
+							className="disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer w-full flex items-center justify-center gap-2 py-3 px-6 text-white text-sm font-medium rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all mt-2"
 							style={{
 								background: "linear-gradient(135deg, #4f46e5 0%, #712ae2 100%)",
 							}}
-							onClick={(e) => handleClick(e)}
+							onClick={(e) => {
+								e.preventDefault();
+								handleUserLogin(dispatch, navigate, { email, password });
+								setEmail("");
+								setPassword("");
+								setShowPassword(false);
+								dispatch(setLoading(false));
+							}}
 						>
-							Create Account
+							Sign In
 							<Icon name="arrow_forward" className="text-xl" />
 						</button>
 					</form>
@@ -218,12 +283,12 @@ export default function SignUp() {
 					{/* Footer */}
 					<div className="mt-10 text-center flex justify-center">
 						<div className="text-base text-gray-500 flex gap-1">
-							Already have an account?
+							Don't have an account?
 							<p
-								onClick={() => navigate("/sign-in")}
+								onClick={() => navigate("/sign-up")}
 								className="text-indigo-600 font-bold hover:underline ml-1 transition-colors cursor-pointer"
 							>
-								Sign In
+								Sign Up
 							</p>
 						</div>
 					</div>

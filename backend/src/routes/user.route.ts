@@ -20,6 +20,4 @@ userRouter.route('/logout').get(authMiddleware, logoutUser);
 userRouter.route('/onboard').get(authMiddleware, onboardUser);
 userRouter.route('/profile/update').get(authMiddleware, updateProfile);
 userRouter.route('/profile').get(authMiddleware, getUserProfile);
-userRouter
-    .route('/refresh-access-token')
-    .get(authMiddleware, refreshAccessToken);
+userRouter.route('/refresh-access-token').get(refreshAccessToken);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 
 const NAV_LINKS = [
 	{ label: "Features", href: "#features" },
@@ -60,7 +61,7 @@ const STEPS = [
 	{
 		n: 2,
 		title: "Complete Profile",
-		desc: "Add your skills, interests, and previous experiences to build a comprehensive student profile.",
+		desc: "Add your socials, and academic details comprehensive student profile.",
 	},
 	{
 		n: 3,
@@ -70,7 +71,7 @@ const STEPS = [
 	{
 		n: 4,
 		title: "Track Progress",
-		desc: "Receive notifications for interviews, tasks, and results directly on your dashboard.",
+		desc: "Track your results and stage reviews directly on your dashboard.",
 	},
 ];
 
@@ -90,6 +91,7 @@ function Icon({ name, className = "" }) {
 export default function Home() {
 	const [scrolled, setScrolled] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		const link1 = document.createElement("link");
@@ -130,7 +132,10 @@ export default function Home() {
 							</a>
 						))}
 						<a
-							href="/get-started"
+							onClick={(e) => {
+								e.preventDefault();
+								navigate("sign-up");
+							}}
 							className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:shadow-lg active:scale-95 transition-all"
 						>
 							Get Started
@@ -153,17 +158,22 @@ export default function Home() {
 						{NAV_LINKS.map((l) => (
 							<a
 								key={l.label}
-								href={l.href}
+								href={l.label === "Sign In" ? undefined : l.href}
 								className="text-gray-600 hover:text-indigo-600 transition-colors"
-								onClick={() => setMobileOpen(false)}
+								onClick={(e) => {
+									setMobileOpen(false);
+								}}
 							>
 								{l.label}
 							</a>
 						))}
 						<a
-							href="/get-started"
 							className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-center hover:shadow-lg transition-all"
-							onClick={() => setMobileOpen(false)}
+							onClick={(e) => {
+								e.preventDefault();
+								setMobileOpen(false);
+								navigate("sign-up");
+							}}
 						>
 							Get Started
 						</a>
@@ -198,7 +208,10 @@ export default function Home() {
 						</p>
 
 						<div className="flex flex-col sm:flex-row gap-4 mb-16">
-							<button className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-lg font-bold text-base transition-all shadow-md hover:shadow-xl active:scale-95">
+							<button
+								onClick={() => navigate("sign-up")}
+								className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-lg font-bold text-base transition-all shadow-md hover:shadow-xl active:scale-95"
+							>
 								Get Started
 							</button>
 							<button className="border border-gray-300 text-gray-800 hover:bg-gray-100 px-10 py-3 rounded-lg font-bold text-base transition-all active:scale-95">

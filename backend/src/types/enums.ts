@@ -1,5 +1,17 @@
-export const Branches = ['CSE', 'ECE', 'ME', 'CE'] as const;
+export const Branches = [
+    'CSE',
+    'CS',
+    'IT',
+    'ECE',
+    'EE',
+    'ME',
+    'CE',
+    'CHE',
+    'MET',
+    'MIN',
+    'PROD'
+] as const;
 export type Branch = (typeof Branches)[number];
 
-export const Batches = ['2023', '2024', '2025'] as const;
+export const Batches = ['2023', '2024', '2025', '2026'] as const;
 export type Batch = (typeof Batches)[number];

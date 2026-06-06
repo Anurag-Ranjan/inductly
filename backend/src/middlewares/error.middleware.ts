@@ -23,14 +23,14 @@ const errorMiddleware = (
             message: issue.message
         }));
         statusCode = 400;
-        message = 'Validation failed';
+        message = JSON.parse(err.message)[0].message;
         errors = formattedErrors;
     } else {
         message = err.message || message;
     }
 
     console.error({
-        message: err.message,
+        message: message || 'error aa rha hai',
         path: req.originalUrl,
         method: req.method,
         stack: err.stack
