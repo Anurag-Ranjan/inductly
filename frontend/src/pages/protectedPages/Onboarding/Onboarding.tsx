@@ -209,7 +209,7 @@ export default function Onboarding() {
 						<div className="text-center">
 							<button
 								onClick={() => {
-									// navigate("/dashboard");
+									navigate("/dashboard");
 								}}
 								className="text-xs font-semibold text-gray-400 hover:text-indigo-600 transition-colors tracking-wide uppercase"
 							>

@@ -1,16 +1,18 @@
 import Loader from "../../components/loaders/Loader";
 import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 
 const PublicRoute = () => {
-	const { loading, isAuthenticated } = useSelector((state) => state.auth);
+	const { loading, isAuthenticated, user } = useSelector((state) => state.auth);
+	const location = useLocation();
 
 	if (loading) {
 		return <Loader />;
 	}
 
 	if (isAuthenticated) {
-		return <Navigate to="/dashboard" replace />;
+		const from = location.state?.from || (user?.isOnboarded ? "/dashboard" : "/onboard");
+		return <Navigate to={from} replace />;
 	}
 
 	return <Outlet />;

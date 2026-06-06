@@ -20,5 +20,5 @@ export const handleUserOnboarding = async (
 	dispatch(setUser({ ...user, isOnboarded: true }));
 	dispatch(setLoading(false));
 	toast.success(result.message);
-	// navigate("/dashboard");
+	navigate("/dashboard");
 };

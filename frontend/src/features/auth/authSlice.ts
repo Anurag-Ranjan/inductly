@@ -10,7 +10,7 @@ interface AuthUser {
 	isVerified: boolean;
 	isProfileComplete: boolean;
 	isPictureUploaded: boolean;
-	isOnboarded: true;
+	isOnboarded: boolean;
 }
 
 interface AuthState {
