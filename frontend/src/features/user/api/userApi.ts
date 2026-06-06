@@ -49,3 +49,17 @@ export const getProfileApi = async () => {
 	const result = await userApiUtil("/user/profile", METHODS.get, {});
 	return result;
 };
+
+export const updateGithubApi = async (payload: {
+	gitHub: string;
+}) => {
+	const result = await userApiUtil("/user/socials/update/github", METHODS.patch, payload);
+	return result;
+};
+
+export const updateLinkedInApi = async (payload: {
+	linkedIn: string;
+}) => {
+	const result = await userApiUtil("/user/socials/update/linkedin", METHODS.patch, payload);
+	return result;
+};

@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-
 function Icon({ name, className = "" }) {
 	return (
 		<span
@@ -14,15 +12,6 @@ function Icon({ name, className = "" }) {
 }
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
-
-const NAV_ITEMS = [
-	{ icon: "dashboard", label: "Dashboard", active: true },
-	{ icon: "groups", label: "My Clubs" },
-	{ icon: "campaign", label: "Open Inductions" },
-	{ icon: "description", label: "Applications" },
-	{ icon: "person", label: "Profile" },
-	{ icon: "settings", label: "Settings" },
-];
 
 const QUICK_ACTIONS = [
 	{
@@ -131,146 +120,9 @@ const OPEN_INDUCTIONS = [
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-	const [activeNav, setActiveNav] = useState("Dashboard");
-	const [sidebarOpen, setSidebarOpen] = useState(false);
-
-	useEffect(() => {
-		const link = document.createElement("link");
-		link.rel = "stylesheet";
-		link.href =
-			"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
-		document.head.appendChild(link);
-	}, []);
 
 	return (
-		<div
-			className="min-h-screen flex font-sans text-gray-900"
-			style={{ background: "#f5f2ff" }}
-		>
-			{/* ── SIDEBAR ── */}
-			<aside
-				className={`flex flex-col gap-2 p-4 h-screen fixed left-0 top-0 border-r border-gray-200 w-64 z-50 transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
-				style={{ background: "#f5f2ff" }}
-			>
-				{/* Brand */}
-				<div className="mb-8 px-3">
-					<h1 className="text-xl font-bold text-indigo-600 leading-tight">
-						Inductly
-					</h1>
-					<p className="text-xs font-semibold text-gray-400 tracking-wide mt-0.5">
-						Student Portal
-					</p>
-				</div>
-
-				{/* Nav links */}
-				<nav className="flex-1 space-y-1">
-					{NAV_ITEMS.map(({ icon, label }) => {
-						const isActive = activeNav === label;
-						return (
-							<button
-								key={label}
-								onClick={() => {
-									setActiveNav(label);
-									setSidebarOpen(false);
-								}}
-								className={`w-full flex items-center gap-4 rounded-lg px-4 py-2 text-sm font-medium transition-all text-left
-                  ${
-										isActive
-											? "bg-indigo-600 text-white font-bold"
-											: "text-gray-500 hover:bg-gray-200"
-									}`}
-							>
-								<Icon name={icon} className="text-xl" />
-								{label}
-							</button>
-						);
-					})}
-				</nav>
-
-				{/* Logout */}
-				<div className="mt-auto border-t border-gray-200 pt-3">
-					<button className="w-full flex items-center gap-4 text-red-500 hover:bg-red-50 rounded-lg px-4 py-2 text-sm font-medium transition-all">
-						<Icon name="logout" className="text-xl" />
-						Logout
-					</button>
-				</div>
-			</aside>
-
-			{/* Mobile overlay */}
-			{sidebarOpen && (
-				<div
-					className="fixed inset-0 bg-black/30 z-40 md:hidden"
-					onClick={() => setSidebarOpen(false)}
-				/>
-			)}
-
-			{/* ── MAIN WRAPPER ── */}
-			<main className="md:ml-64 flex-1 min-h-screen">
-				{/* ── TOP BAR ── */}
-				<header
-					className="flex justify-between items-center w-full px-6 h-20 bg-white border-b border-gray-200 sticky top-0 z-40"
-					style={{
-						boxShadow:
-							"0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
-					}}
-				>
-					{/* Mobile hamburger */}
-					<button
-						className="md:hidden mr-3 p-2 rounded-full hover:bg-gray-100 transition-colors"
-						onClick={() => setSidebarOpen(true)}
-					>
-						<Icon name="menu" className="text-gray-500 text-2xl" />
-					</button>
-
-					{/* Search */}
-					<div className="flex items-center gap-4 w-full md:w-1/3">
-						<div className="relative w-full max-w-md">
-							<Icon
-								name="search"
-								className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl pointer-events-none"
-							/>
-							<input
-								type="text"
-								placeholder="Search clubs, inductions..."
-								className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-							/>
-						</div>
-					</div>
-
-					{/* Right controls */}
-					<div className="flex items-center gap-5">
-						<button className="relative hover:bg-gray-100 rounded-full p-2 transition-all active:scale-95">
-							<Icon name="notifications" className="text-gray-500 text-xl" />
-							<span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-						</button>
-						<button className="hover:bg-gray-100 rounded-full p-2 transition-all active:scale-95">
-							<Icon name="help" className="text-gray-500 text-xl" />
-						</button>
-
-						<div className="h-8 w-px bg-gray-200 mx-1" />
-
-						{/* User chip */}
-						<div className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 rounded-lg p-1 transition-all">
-							<div className="text-right hidden sm:block">
-								<p className="text-sm font-medium text-gray-900 leading-tight">
-									Alex Rivera
-								</p>
-								<p className="text-xs font-semibold text-gray-400">
-									Computer Science
-								</p>
-							</div>
-							<img
-								src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkCS9pzCYXjNtvtNfYRaXLI-0R7c20JjGWWu3UqB1ymWo7CTqCka_laR6PVi2X4v_k88Szx_b_Z3nltUuwlapN4WBB9RwAcRuEL9rJ6d9GnWhdgeL-2d-feH3Z7dKBpCT5fCUVTiTQMPPNtdmLD0P3aA88hMdQabhmkmAZnWV8uFFkGgx_Lj6E8WydPLgeHNBie8s3B08VfWJ3w9MHBrs-wv40yMX8wBfap2ey9sjfZVnFXXFQKo7fNok7sjr4QlC1LSydE80aQ6NW"
-								alt="User Profile"
-								className="w-10 h-10 rounded-full border-2 border-indigo-600 object-cover"
-							/>
-						</div>
-					</div>
-				</header>
-
-				{/* ── PAGE CANVAS ── */}
-				<div className="p-6 max-w-7xl mx-auto space-y-8">
+		<div className="p-6 max-w-7xl mx-auto space-y-8">
 					{/* Welcome */}
 					<section>
 						<h2 className="text-4xl font-bold text-gray-900 tracking-tight leading-tight">
@@ -490,8 +342,6 @@ export default function Dashboard() {
 							</div>
 						</section>
 					</div>
-				</div>
-			</main>
 		</div>
 	);
 }

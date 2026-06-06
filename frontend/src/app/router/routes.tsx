@@ -8,6 +8,7 @@ import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 import Onboarding from "../../pages/protectedPages/Onboarding/Onboarding";
 import Profile from "../../pages/protectedPages/Profile/Profile";
+import ProtectedLayout from "../layout/ProtectedLayout";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -20,8 +21,10 @@ export const routes = createRoutesFromElements(
 
 		<Route element={<PrivateRoute />}>
 			<Route path="onboard" element={<Onboarding />}></Route>
-			<Route path="dashboard" element={<DashBoard />}></Route>
-			<Route path="profile" element={<Profile />}></Route>
+			<Route element={<ProtectedLayout />}>
+				<Route path="dashboard" element={<DashBoard />}></Route>
+				<Route path="profile" element={<Profile />}></Route>
+			</Route>
 		</Route>
 	</>,
 );

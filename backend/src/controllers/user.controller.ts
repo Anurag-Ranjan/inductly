@@ -329,8 +329,19 @@ const getUserProfile: RequestHandler = asyncHandler(async (req, res) => {
 
     if (!user) throw new ApiError(500, 'Internal Server Error');
 
-    const profileFields: (keyof typeof user)[] = ['name', 'email', 'profile_picture', 'branch', 'batch', 'github', 'linkedin', 'mobile_number'];
-    const completedFields = profileFields.filter(f => user[f] != null && user[f] !== '').length;
+    const profileFields: (keyof typeof user)[] = [
+        'name',
+        'email',
+        'profile_picture',
+        'branch',
+        'batch',
+        'github',
+        'linkedin',
+        'mobile_number'
+    ];
+    const completedFields = profileFields.filter(
+        (f) => user[f] != null && user[f] !== ''
+    ).length;
 
     return res
         .status(200)
@@ -343,6 +354,69 @@ const getUserProfile: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const updateGithub: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const { gitHub }: { gitHub: string } = req.body;
+
+    const github = gitHubSchema.parse(gitHub);
+
+    const updatedSocials = await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            github: github
+        },
+        select: {
+            github: true
+        }
+    });
+
+    if (!updatedSocials) throw new ApiError(404, 'User not found');
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(201, updatedSocials, 'Github updated successfully')
+        );
+});
+
+const updateLinkedIn: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const { linkedIn }: { linkedIn: string } = req.body;
+    console.log(linkedIn);
+
+    const linkedin = linkedInSchema.parse(linkedIn);
+
+    const updatedSocials = await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            linkedin: linkedin
+        },
+        select: {
+            linkedin: true
+        }
+    });
+
+    if (!updatedSocials) throw new ApiError(404, 'User not found');
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                updatedSocials,
+                'LinkedIn updated successfully'
+            )
+        );
+});
+
 export {
     registerUser,
     verifyUser,
@@ -351,5 +425,7 @@ export {
     onboardUser,
     updateProfile,
     refreshAccessToken,
-    getUserProfile
+    getUserProfile,
+    updateGithub,
+    updateLinkedIn
 };

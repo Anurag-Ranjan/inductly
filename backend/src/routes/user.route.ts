@@ -7,7 +7,9 @@ import {
     onboardUser,
     updateProfile,
     refreshAccessToken,
-    getUserProfile
+    getUserProfile,
+    updateGithub,
+    updateLinkedIn
 } from '../controllers/user.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
@@ -18,6 +20,10 @@ userRouter.route('/verify/:token').get(verifyUser);
 userRouter.route('/login').post(loginUser);
 userRouter.route('/logout').get(authMiddleware, logoutUser);
 userRouter.route('/onboard').post(authMiddleware, onboardUser);
-userRouter.route('/profile/update').get(authMiddleware, updateProfile);
+userRouter.route('/profile/update').patch(authMiddleware, updateProfile);
 userRouter.route('/profile').get(authMiddleware, getUserProfile);
 userRouter.route('/refresh-access-token').get(refreshAccessToken);
+userRouter.route('/socials/update/github').patch(authMiddleware, updateGithub);
+userRouter
+    .route('/socials/update/linkedin')
+    .patch(authMiddleware, updateLinkedIn);

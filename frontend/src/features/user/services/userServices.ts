@@ -1,6 +1,11 @@
 import { toast } from "react-toastify";
 import { setLoading, setUser } from "../../auth/authSlice";
-import { onboardApi, getProfileApi } from "../api/userApi";
+import {
+	onboardApi,
+	getProfileApi,
+	updateGithubApi,
+	updateLinkedInApi,
+} from "../api/userApi";
 
 export const handleUserOnboarding = async (
 	payload: {
@@ -28,6 +33,32 @@ export const handleGetUserProfile = async (dispatch: any) => {
 	const result = await getProfileApi();
 	if (!result.success) {
 		toast.error(result.data.message);
+		dispatch(setLoading(false));
+		return;
+	}
+	dispatch(setLoading(false));
+	toast.success(result.message);
+	return result.data;
+};
+
+export const handleUpdateGithub = async (dispatch: any, gitHub: string) => {
+	dispatch(setLoading(true));
+	const result = await updateGithubApi({ gitHub });
+	if (!result.success) {
+		toast.error(result.data?.message || "Failed to update GitHub");
+		dispatch(setLoading(false));
+		return;
+	}
+	dispatch(setLoading(false));
+	toast.success(result.message);
+	return result.data;
+};
+
+export const handleUpdateLinkedIn = async (dispatch: any, linkedIn: string) => {
+	dispatch(setLoading(true));
+	const result = await updateLinkedInApi({ linkedIn });
+	if (!result.success) {
+		toast.error(result.data?.message || "Failed to update LinkedIn");
 		dispatch(setLoading(false));
 		return;
 	}
