@@ -388,7 +388,6 @@ const updateLinkedIn: RequestHandler = asyncHandler(async (req, res) => {
     if (!user) throw new ApiError(401, 'Unauthenticated');
 
     const { linkedIn }: { linkedIn: string } = req.body;
-    console.log(linkedIn);
 
     const linkedin = linkedInSchema.parse(linkedIn);
 
