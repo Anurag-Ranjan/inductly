@@ -6,12 +6,10 @@ const PrivateRoute = () => {
 	const { loading, isAuthenticated, user } = useSelector((state) => state.auth);
 	const location = useLocation();
 
-	if (loading) {
-		return <Loader />;
-	}
-
 	if (!isAuthenticated) {
-		return <Navigate to="/sign-in" state={{ from: location.pathname }} replace />;
+		return (
+			<Navigate to="/sign-in" state={{ from: location.pathname }} replace />
+		);
 	}
 
 	if (user?.isOnboarded && location.pathname === "/onboard") {
@@ -22,7 +20,12 @@ const PrivateRoute = () => {
 		return <Navigate to="/onboard" replace />;
 	}
 
-	return <Outlet />;
+	return (
+		<>
+			<Outlet />
+			{loading && <Loader />}
+		</>
+	);
 };
 
 export default PrivateRoute;

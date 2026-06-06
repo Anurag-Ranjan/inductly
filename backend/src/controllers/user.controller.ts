@@ -329,9 +329,18 @@ const getUserProfile: RequestHandler = asyncHandler(async (req, res) => {
 
     if (!user) throw new ApiError(500, 'Internal Server Error');
 
+    const profileFields: (keyof typeof user)[] = ['name', 'email', 'profile_picture', 'branch', 'batch', 'github', 'linkedin', 'mobile_number'];
+    const completedFields = profileFields.filter(f => user[f] != null && user[f] !== '').length;
+
     return res
         .status(200)
-        .json(new ApiResponse(200, { user }, 'Profile fetched successfully'));
+        .json(
+            new ApiResponse(
+                200,
+                { ...user, totalFields: profileFields.length, completedFields },
+                'Profile fetched successfully'
+            )
+        );
 });
 
 export {

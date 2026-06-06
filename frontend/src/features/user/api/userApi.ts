@@ -44,3 +44,8 @@ export const onboardApi = async (payload: {
 	const result = await userApiUtil("/user/onboard", METHODS.post, payload);
 	return result;
 };
+
+export const getProfileApi = async () => {
+	const result = await userApiUtil("/user/profile", METHODS.get, {});
+	return result;
+};

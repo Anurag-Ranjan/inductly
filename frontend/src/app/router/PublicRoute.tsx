@@ -6,16 +6,18 @@ const PublicRoute = () => {
 	const { loading, isAuthenticated, user } = useSelector((state) => state.auth);
 	const location = useLocation();
 
-	if (loading) {
-		return <Loader />;
-	}
-
 	if (isAuthenticated) {
-		const from = location.state?.from || (user?.isOnboarded ? "/dashboard" : "/onboard");
+		const from =
+			location.state?.from || (user?.isOnboarded ? "/dashboard" : "/onboard");
 		return <Navigate to={from} replace />;
 	}
 
-	return <Outlet />;
+	return (
+		<>
+			<Outlet />
+			{loading && <Loader />}
+		</>
+	);
 };
 
 export default PublicRoute;
