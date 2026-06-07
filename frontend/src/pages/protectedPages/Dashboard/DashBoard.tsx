@@ -1,3 +1,7 @@
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getDashboardService } from "../../../features/dashboard/services/dashboardServices";
+
 function Icon({ name, className = "" }) {
 	return (
 		<span
@@ -40,62 +44,25 @@ const QUICK_ACTIONS = [
 	},
 ];
 
-const STATS = [
-	{ label: "CLUBS JOINED", value: "3", color: "text-indigo-600", accent: "" },
-	{ label: "TOTAL APPS", value: "5", color: "text-gray-900", accent: "" },
-	{
-		label: "PENDING",
-		value: "2",
-		color: "text-purple-600",
-		accent: "border-l-4 border-l-purple-500",
-	},
-	{
-		label: "ACCEPTED",
-		value: "1",
-		color: "text-green-600",
-		accent: "border-l-4 border-l-green-600",
-	},
-	{ label: "REJECTED", value: "2", color: "text-red-600", accent: "" },
+const STAT_CONFIG = [
+	{ key: "membershipCount", label: "CLUBS JOINED", color: "text-indigo-600", accent: "" },
+	{ key: "applicationCount", label: "TOTAL APPS", color: "text-gray-900", accent: "" },
+	{ key: "PENDING", label: "PENDING", color: "text-purple-600", accent: "border-l-4 border-l-purple-500" },
+	{ key: "SHORTLISTED", label: "SHORTLISTED", color: "text-blue-600", accent: "border-l-4 border-l-blue-500" },
+	{ key: "ACCEPTED", label: "ACCEPTED", color: "text-green-600", accent: "border-l-4 border-l-green-600" },
+	{ key: "REJECTED", label: "REJECTED", color: "text-red-600", accent: "" },
 ];
 
-const ACTIVITIES = [
-	{
-		initials: "DS",
-		avatarBg: "bg-indigo-100",
-		avatarText: "text-indigo-700",
-		club: "Debating Society",
-		intake: "Winter Intake 2024",
-		activity: "Application Submitted",
-		time: "2 hours ago",
-		badge: "Processing",
-		badgeBg: "bg-blue-100",
-		badgeText: "text-blue-800",
-	},
-	{
-		initials: "RC",
-		avatarBg: "bg-purple-100",
-		avatarText: "text-purple-700",
-		club: "Robotics Club",
-		intake: "Member Induction",
-		activity: "Invitation Received",
-		time: "Yesterday",
-		badge: "Accepted",
-		badgeBg: "bg-green-100",
-		badgeText: "text-green-800",
-	},
-	{
-		initials: "AS",
-		avatarBg: "bg-amber-100",
-		avatarText: "text-amber-700",
-		club: "Art Society",
-		intake: "Exhibition Lead",
-		activity: "Under Review",
-		time: "3 days ago",
-		badge: "Pending",
-		badgeBg: "bg-amber-100",
-		badgeText: "text-amber-800",
-	},
-];
+const BADGE_STYLES: Record<string, { bg: string; text: string }> = {
+	PENDING: { bg: "bg-amber-100", text: "text-amber-800" },
+	SHORTLISTED: { bg: "bg-blue-100", text: "text-blue-800" },
+	ACCEPTED: { bg: "bg-green-100", text: "text-green-800" },
+	REJECTED: { bg: "bg-red-100", text: "text-red-800" },
+};
+
+function getInitials(name: string) {
+	return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
 
 const OPEN_INDUCTIONS = [
 	{
@@ -120,228 +87,180 @@ const OPEN_INDUCTIONS = [
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+	const dispatch = useDispatch();
+	const user = useSelector((state: any) => state.auth.user);
+	const [dashboardData, setDashboardData] = useState<any>(null);
+
+	useEffect(() => {
+		const fetchDashboard = async () => {
+			const data = await getDashboardService(dispatch);
+			if (data) setDashboardData(data);
+		};
+		fetchDashboard();
+	}, []);
+
+	const stats = buildStats(dashboardData?.stats);
 
 	return (
 		<div className="p-6 max-w-7xl mx-auto space-y-8">
-					{/* Welcome */}
-					<section>
-						<h2 className="text-4xl font-bold text-gray-900 tracking-tight leading-tight">
-							Welcome back, Alex!
-						</h2>
-						<p className="text-lg text-gray-500 mt-1">
-							Here's what's happening with your club inductions today.
-						</p>
-					</section>
+			<section>
+				<h2 className="text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+					Welcome back, {user?.name || "User"}!
+				</h2>
+				<p className="text-lg text-gray-500 mt-1">
+					Here's what's happening with your club inductions today.
+				</p>
+			</section>
 
-					{/* Quick Actions */}
-					<section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						{QUICK_ACTIONS.map(
-							({ icon, label, sub, iconBg, iconColor, hoverBorder }) => (
-								<button
-									key={label}
-									className={`group flex flex-col items-start p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md ${hoverBorder} transition-all active:scale-[0.98]`}
-									style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
-								>
+			<section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+				{QUICK_ACTIONS.map(({ icon, label, sub, iconBg, iconColor, hoverBorder }) => (
+					<button
+						key={label}
+						className={`group flex flex-col items-start p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md ${hoverBorder} transition-all active:scale-[0.98]`}
+						style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
+					>
+						<div className={`p-3 ${iconBg} ${iconColor} rounded-lg mb-4 group-hover:scale-110 transition-transform`}>
+							<Icon name={icon} className="text-2xl" />
+						</div>
+						<span className="text-xl font-semibold text-gray-900">{label}</span>
+						<span className="text-sm text-gray-500 mt-1 text-left leading-relaxed">{sub}</span>
+					</button>
+				))}
+			</section>
+
+			<section className="grid grid-cols-2 lg:grid-cols-6 gap-6">
+				{stats.map(({ label, value, color, accent }: any) => (
+					<div
+						key={label}
+						className={`bg-white p-6 border border-gray-200 rounded-xl text-center ${accent}`}
+						style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
+					>
+						<p className="text-xs font-semibold text-gray-400 tracking-widest mb-1">{label}</p>
+						<p className={`text-4xl font-bold tracking-tight ${color}`}>{value}</p>
+					</div>
+				))}
+			</section>
+
+			<div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+				<section className="xl:col-span-2 space-y-4">
+					<h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
+						Active Applications
+					</h3>
+
+					{dashboardData?.applications?.length > 0 ? (
+						<div className="space-y-4">
+							{dashboardData.applications.map((app: any) => {
+								const badge = BADGE_STYLES[app.status as keyof typeof BADGE_STYLES] || BADGE_STYLES.PENDING;
+								const pct = app.progress.totalStages > 0
+									? Math.round((app.progress.completedStages / app.progress.totalStages) * 100)
+									: 0;
+								return (
 									<div
-										className={`p-3 ${iconBg} ${iconColor} rounded-lg mb-4 group-hover:scale-110 transition-transform`}
-									>
-										<Icon name={icon} className="text-2xl" />
-									</div>
-									<span className="text-xl font-semibold text-gray-900">
-										{label}
-									</span>
-									<span className="text-sm text-gray-500 mt-1 text-left leading-relaxed">
-										{sub}
-									</span>
-								</button>
-							),
-						)}
-					</section>
-
-					{/* Stats */}
-					<section className="grid grid-cols-2 lg:grid-cols-5 gap-6">
-						{STATS.map(({ label, value, color, accent }) => (
-							<div
-								key={label}
-								className={`bg-white p-6 border border-gray-200 rounded-xl text-center ${accent}`}
-								style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
-							>
-								<p className="text-xs font-semibold text-gray-400 tracking-widest mb-1">
-									{label}
-								</p>
-								<p className={`text-4xl font-bold tracking-tight ${color}`}>
-									{value}
-								</p>
-							</div>
-						))}
-					</section>
-
-					{/* Main Data View */}
-					<div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-						{/* Recent Activity */}
-						<section className="xl:col-span-2 space-y-4">
-							<div className="flex justify-between items-end">
-								<h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
-									Recent Activity
-								</h3>
-								<a
-									href="#"
-									className="text-sm font-medium text-indigo-600 hover:underline"
-								>
-									View All
-								</a>
-							</div>
-
-							<div
-								className="bg-white border border-gray-200 rounded-xl overflow-hidden"
-								style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
-							>
-								<table className="w-full text-left">
-									<thead className="bg-gray-50">
-										<tr>
-											<th className="px-6 py-4 text-xs font-semibold text-gray-400 tracking-widest uppercase">
-												Club / Society
-											</th>
-											<th className="px-6 py-4 text-xs font-semibold text-gray-400 tracking-widest uppercase">
-												Activity
-											</th>
-											<th className="px-6 py-4 text-xs font-semibold text-gray-400 tracking-widest uppercase text-right">
-												Status
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-gray-100">
-										{ACTIVITIES.map(
-											({
-												initials,
-												avatarBg,
-												avatarText,
-												club,
-												intake,
-												activity,
-												time,
-												badge,
-												badgeBg,
-												badgeText,
-											}) => (
-												<tr
-													key={club}
-													className="hover:bg-gray-50 transition-colors"
-												>
-													<td className="px-6 py-4">
-														<div className="flex items-center gap-4">
-															<div
-																className={`w-10 h-10 rounded-lg ${avatarBg} flex items-center justify-center ${avatarText} font-bold text-sm flex-shrink-0`}
-															>
-																{initials}
-															</div>
-															<div>
-																<p className="text-sm font-medium text-gray-900">
-																	{club}
-																</p>
-																<p className="text-xs text-gray-400">
-																	{intake}
-																</p>
-															</div>
-														</div>
-													</td>
-													<td className="px-6 py-4">
-														<p className="text-sm text-gray-700">{activity}</p>
-														<p className="text-xs text-gray-400">{time}</p>
-													</td>
-													<td className="px-6 py-4 text-right">
-														<span
-															className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeBg} ${badgeText}`}
-														>
-															{badge}
-														</span>
-													</td>
-												</tr>
-											),
-										)}
-									</tbody>
-								</table>
-							</div>
-						</section>
-
-						{/* Open Inductions Sidebar */}
-						<section className="space-y-4">
-							<div className="flex justify-between items-end">
-								<h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
-									Open Inductions
-								</h3>
-								<a
-									href="#"
-									className="text-sm font-medium text-indigo-600 hover:underline"
-								>
-									See All
-								</a>
-							</div>
-
-							<div className="space-y-4">
-								{OPEN_INDUCTIONS.map(({ img, alt, name, closes, tags }) => (
-									<div
-										key={name}
-										className="bg-white border border-gray-200 rounded-xl p-4 hover:scale-[1.02] transition-transform cursor-pointer"
+										key={app.applicationId}
+										className="bg-white border border-gray-200 rounded-xl p-5"
 										style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
 									>
-										<div className="flex gap-4">
-											<div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-												<img
-													src={img}
-													alt={alt}
-													className="w-full h-full object-cover"
-												/>
-											</div>
-											<div className="flex-1 min-w-0">
-												<p className="text-sm font-medium text-gray-900 truncate">
-													{name}
-												</p>
-												<p className="text-xs text-gray-400 mt-0.5">{closes}</p>
-												<div className="mt-2 flex flex-wrap gap-2">
-													{tags.map(({ label, bg, text }) => (
-														<span
-															key={label}
-															className={`text-xs font-semibold px-2 py-0.5 ${bg} ${text} rounded`}
-														>
-															{label}
-														</span>
-													))}
+										<div className="flex items-start justify-between gap-4">
+											<div className="flex items-center gap-4 min-w-0">
+												{app.club.logo ? (
+													<img
+														src={app.club.logo}
+														alt={app.club.name}
+														className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+													/>
+												) : (
+													<div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+														{getInitials(app.club.name)}
+													</div>
+												)}
+												<div className="min-w-0">
+													<p className="text-base font-semibold text-gray-900 truncate">{app.club.name}</p>
+													<p className="text-sm text-gray-500 truncate">{app.induction.title}</p>
 												</div>
+											</div>
+											<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${badge.bg} ${badge.text}`}>
+												{app.status}
+											</span>
+										</div>
+										<div className="mt-4 space-y-1">
+											<div className="flex justify-between text-xs text-gray-500">
+												<span>Progress</span>
+												<span>{app.progress.completedStages} / {app.progress.totalStages} Stages</span>
+											</div>
+											<div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+												<div
+													className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+													style={{ width: `${pct}%` }}
+												/>
 											</div>
 										</div>
 									</div>
-								))}
+								);
+							})}
+						</div>
+					) : (
+						<div className="bg-white border border-gray-200 rounded-xl p-8 text-center" style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}>
+							<Icon name="inbox" className="text-4xl text-gray-300" />
+							<p className="mt-3 text-gray-500">No applications yet</p>
+						</div>
+					)}
+				</section>
 
-								{/* Pro Tip card */}
-								<div
-									className="relative p-6 rounded-xl text-white overflow-hidden"
-									style={{
-										background:
-											"linear-gradient(135deg, #3525cd 0%, #712ae2 100%)",
-										boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
-									}}
-								>
-									<div className="relative z-10">
-										<h4 className="text-xl font-semibold">Pro Tip</h4>
-										<p className="text-sm opacity-90 mt-1 leading-relaxed">
-											Completed profiles have a 40% higher acceptance rate in
-											technical clubs.
-										</p>
-										<button className="mt-4 bg-white text-indigo-600 text-sm font-medium px-4 py-2 rounded-lg active:scale-95 transition-all hover:shadow-md">
-											Update Now
-										</button>
+				<section className="space-y-4">
+					<div className="flex justify-between items-end">
+						<h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
+							Open Inductions
+						</h3>
+						<a href="#" className="text-sm font-medium text-indigo-600 hover:underline">
+							See All
+						</a>
+					</div>
+
+					<div className="space-y-4">
+						{OPEN_INDUCTIONS.map(({ img, alt, name, closes, tags }) => (
+							<div
+								key={name}
+								className="bg-white border border-gray-200 rounded-xl p-4 hover:scale-[1.02] transition-transform cursor-pointer"
+								style={{ boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)" }}
+							>
+								<div className="flex gap-4">
+									<div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+										<img src={img} alt={alt} className="w-full h-full object-cover" />
 									</div>
-									{/* Decorative icon */}
-									<Icon
-										name="auto_awesome"
-										className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none"
-										style={{ fontSize: "9rem" }}
-									/>
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+										<p className="text-xs text-gray-400 mt-0.5">{closes}</p>
+										<div className="mt-2 flex flex-wrap gap-2">
+											{tags.map(({ label, bg, text }) => (
+												<span key={label} className={`text-xs font-semibold px-2 py-0.5 ${bg} ${text} rounded`}>
+													{label}
+												</span>
+											))}
+										</div>
+									</div>
 								</div>
 							</div>
-						</section>
+						))}
 					</div>
+				</section>
+			</div>
 		</div>
 	);
+}
+
+function buildStats(stats: any) {
+	if (!stats) return STAT_CONFIG.map((c) => ({ ...c, value: "0" }));
+	const statusCounts: Record<string, number> = {};
+	if (stats.applicationStats?.length) {
+		for (const s of stats.applicationStats) {
+			statusCounts[s.status] = s._count;
+		}
+	}
+	return STAT_CONFIG.map((config) => {
+		let value = 0;
+		if (config.key === "membershipCount") value = stats.membershipCount ?? 0;
+		else if (config.key === "applicationCount") value = stats.applicationCount ?? 0;
+		else value = statusCounts[config.key] ?? 0;
+		return { ...config, value: String(value) };
+	});
 }

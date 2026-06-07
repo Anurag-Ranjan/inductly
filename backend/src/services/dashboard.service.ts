@@ -1,53 +1,15 @@
+import { ApplicationStatus } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { prisma } from '../utils/prisma';
 
 const fetchDashboard = async (userId: number) => {
-    const [user, memberships, applications, applicationCount, inductionCount] =
+    const [membershipCount, applicationCount, applicationStats, applications] =
         await Promise.all([
-            prisma.user.findUnique({ where: { id: userId } }),
-
-            prisma.membership.findMany({
-                where: { user_id: userId },
-                include: {
-                    club: {
-                        select: {
-                            id: true,
-                            name: true,
-                            logo: true
-                        }
-                    }
-                }
-            }),
-
-            prisma.application.findMany({
+            prisma.membership.count({
                 where: {
-                    user_id: userId
-                },
-                orderBy: { created_at: 'desc' },
-                include: {
-                    induction: {
-                        select: {
-                            title: true
-                        },
-                        include: {
-                            club: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    logo: true
-                                }
-                            }
-                        }
-                    },
-                    currentStage: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    stageProgress: {
-                        select: {
-                            status: true
-                        }
+                    user_id: userId,
+                    inducted_on: {
+                        not: null
                     }
                 }
             }),
@@ -56,25 +18,49 @@ const fetchDashboard = async (userId: number) => {
                 where: { user_id: userId }
             }),
 
-            prisma.membership.count({
+            prisma.application.groupBy({
+                by: ['status'],
                 where: {
-                    user_id: userId,
-                    inducted_on: {
-                        not: null
+                    user_id: userId
+                },
+                _count: true
+            }),
+
+            prisma.application.findMany({
+                where: {
+                    user_id: userId
+                },
+                select: {
+                    id: true,
+                    status: true,
+
+                    stageProgress: {
+                        select: {
+                            status: true
+                        }
+                    },
+
+                    currentStage: {
+                        select: {
+                            name: true
+                        }
+                    },
+
+                    induction: {
+                        select: {
+                            title: true,
+
+                            club: {
+                                select: {
+                                    name: true,
+                                    logo: true
+                                }
+                            }
+                        }
                     }
                 }
             })
         ]);
-
-    if (!user) throw new ApiError(404, 'User not found');
-
-    const clubs = memberships.map((m) => ({
-        clubId: m.club.id,
-        name: m.club.name,
-        logo: m.club.logo,
-        role: m.role,
-        inducted_on: m.inducted_on
-    }));
 
     const formattedApplications = applications.map((app) => {
         const completedStages = app.stageProgress.filter(
@@ -102,14 +88,11 @@ const fetchDashboard = async (userId: number) => {
     });
 
     return {
-        user,
         stats: {
-            clubsInducted: inductionCount,
+            membershipCount,
             applicationCount,
-            hasActiveApplications: applicationCount > 0,
-            isMemberOfAnyClub: memberships.length > 0
+            applicationStats
         },
-        clubs,
         applications: formattedApplications
     };
 };
