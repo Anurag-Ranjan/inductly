@@ -5,6 +5,8 @@ import {
 	getProfileApi,
 	updateGithubApi,
 	updateLinkedInApi,
+	updateProfileApi,
+	updateProfilePictureApi,
 } from "../api/userApi";
 
 export const handleUserOnboarding = async (
@@ -59,6 +61,32 @@ export const handleUpdateLinkedIn = async (dispatch: any, linkedIn: string) => {
 	const result = await updateLinkedInApi({ linkedIn });
 	if (!result.success) {
 		toast.error(result.data?.message || "Failed to update LinkedIn");
+		dispatch(setLoading(false));
+		return;
+	}
+	dispatch(setLoading(false));
+	toast.success(result.message);
+	return result.data;
+};
+
+export const handleUpdateProfile = async (dispatch: any, mobile_number: string) => {
+	dispatch(setLoading(true));
+	const result = await updateProfileApi({ mobile_number });
+	if (!result.success) {
+		toast.error(result.data?.message || "Failed to update profile");
+		dispatch(setLoading(false));
+		return;
+	}
+	dispatch(setLoading(false));
+	toast.success(result.message);
+	return result.data;
+};
+
+export const handleUpdateProfilePicture = async (dispatch: any, file: File) => {
+	dispatch(setLoading(true));
+	const result = await updateProfilePictureApi(file);
+	if (!result?.success) {
+		toast.error(result?.data?.message || "Failed to update profile picture");
 		dispatch(setLoading(false));
 		return;
 	}

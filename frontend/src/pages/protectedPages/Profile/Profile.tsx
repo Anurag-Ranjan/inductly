@@ -5,6 +5,8 @@ import {
 	handleGetUserProfile,
 	handleUpdateGithub,
 	handleUpdateLinkedIn,
+	handleUpdateProfile,
+	handleUpdateProfilePicture,
 } from "../../../features/user/services/userServices";
 
 function Icon({ name, className = "" }) {
@@ -53,7 +55,8 @@ export default function Profile() {
 	const fileInputRef = useRef(null);
 	const [editingSocial, setEditingSocial] = useState<string | null>(null);
 	const [socialInput, setSocialInput] = useState("");
-	const [isEditingProfile, setIsEditingProfile] = useState(false);
+	const [isEditingPhone, setIsEditingPhone] = useState(false);
+	const [phoneInput, setPhoneInput] = useState("");
 
 	// Fetch profile data on mount
 	useEffect(() => {
@@ -87,9 +90,6 @@ export default function Profile() {
 		}
 	}, [profileData]);
 
-	const handleChange = (field) => (e) =>
-		setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
 	const handleSocialSave = async (dataKey: string) => {
 		if (!socialInput.trim()) return;
 		const updateFn =
@@ -107,6 +107,20 @@ export default function Profile() {
 	const handleSocialEdit = (dataKey: string, existingUrl?: string) => {
 		setSocialInput(existingUrl || "");
 		setEditingSocial(dataKey);
+	};
+
+	const handlePhoneSave = async () => {
+		if (!phoneInput.trim()) return;
+		const updated = await handleUpdateProfile(dispatch, phoneInput);
+		if (updated) {
+			const data = await handleGetUserProfile(dispatch);
+			if (data) {
+				setProfileData(data);
+				setForm((prev) => ({ ...prev, phone: data.mobile_number || "" }));
+			}
+			setIsEditingPhone(false);
+			setPhoneInput("");
+		}
 	};
 
 	return (
@@ -143,16 +157,24 @@ export default function Profile() {
 							accept="image/*"
 							ref={fileInputRef}
 							className="hidden"
-							onChange={(e) => {
+							onChange={async (e) => {
 								const file = e.target.files?.[0];
 								if (file) {
-									// handle file upload
+									const updated = await handleUpdateProfilePicture(dispatch, file);
+									if (updated) {
+										setProfileData((prev) =>
+											prev ? { ...prev, profile_picture: updated.profile_picture } : prev,
+										);
+									}
+									e.target.value = "";
 								}
 							}}
 						/>
 						<button
 							className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full shadow-md hover:scale-105 transition-transform"
-							onClick={() => fileInputRef.current?.click()}
+							onClick={() => {
+								fileInputRef.current?.click();
+							}}
 						>
 							<Icon name="photo_camera" className="text-sm" />
 						</button>
@@ -247,20 +269,61 @@ export default function Profile() {
 
 								{/* Phone */}
 								<div className="space-y-1">
-									<label className="block text-sm font-medium text-gray-500">
-										Phone Number
-									</label>
-									<input
-										type="tel"
-										value={form.phone}
-										onChange={handleChange("phone")}
-										disabled={!isEditingProfile}
-										className={`w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none transition-all ${
-											isEditingProfile
-												? "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-												: "bg-gray-50 cursor-not-allowed opacity-70"
-										}`}
-									/>
+									<div className="flex items-center justify-between">
+										<label className="block text-sm font-medium text-gray-500">
+											Phone Number
+										</label>
+										{!isEditingPhone ? (
+											<button
+												type="button"
+												onClick={() => {
+													setPhoneInput(form.phone);
+													setIsEditingPhone(true);
+												}}
+												className="text-gray-400 hover:text-indigo-600 transition-colors"
+											>
+												<Icon name="edit" className="text-lg" />
+											</button>
+										) : null}
+									</div>
+									{isEditingPhone ? (
+										<div className="flex flex-col gap-2">
+											<input
+												type="tel"
+												value={phoneInput}
+												onChange={(e) => setPhoneInput(e.target.value)}
+												className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+												autoFocus
+											/>
+											<div className="flex justify-end gap-2">
+												<button
+													type="button"
+													onClick={() => {
+														setIsEditingPhone(false);
+														setPhoneInput("");
+													}}
+													className="text-sm cursor-pointer text-gray-500 hover:text-gray-700 px-3 py-1"
+												>
+													Cancel
+												</button>
+												<button
+													type="button"
+													onClick={handlePhoneSave}
+													disabled={!phoneInput.trim()}
+													className="text-sm cursor-pointer font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-1 rounded-lg transition-colors"
+												>
+													Save
+												</button>
+											</div>
+										</div>
+									) : (
+										<input
+											type="tel"
+											value={form.phone}
+											disabled
+											className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 bg-gray-50 cursor-not-allowed opacity-70 outline-none"
+										/>
+									)}
 								</div>
 
 								{/* Branch */}
@@ -270,13 +333,8 @@ export default function Profile() {
 									</label>
 									<select
 										value={form.branch}
-										onChange={handleChange("branch")}
-										disabled={!isEditingProfile}
-										className={`w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none transition-all appearance-none ${
-											isEditingProfile
-												? "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-												: "bg-gray-50 cursor-not-allowed opacity-70"
-										}`}
+										disabled
+										className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 bg-gray-50 cursor-not-allowed opacity-70 outline-none appearance-none"
 									>
 										<option value="" disabled>
 											Select your branch
@@ -296,13 +354,8 @@ export default function Profile() {
 									</label>
 									<select
 										value={form.batch}
-										onChange={handleChange("batch")}
-										disabled={!isEditingProfile}
-										className={`w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none transition-all appearance-none ${
-											isEditingProfile
-												? "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-												: "bg-gray-50 cursor-not-allowed opacity-70"
-										}`}
+										disabled
+										className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 bg-gray-50 cursor-not-allowed opacity-70 outline-none appearance-none"
 									>
 										<option value="" disabled>
 											Select your year
@@ -339,20 +392,7 @@ export default function Profile() {
 									/>
 								</div>
 
-								{/* Submit */}
-								<div className="md:col-span-2 pt-2">
-									<button
-										type="button"
-										onClick={() => setIsEditingProfile(!isEditingProfile)}
-										className="cursor-pointer px-8 py-3 text-white text-sm font-medium rounded-lg shadow-md active:scale-[0.98] transition-all"
-										style={{
-											background:
-												"linear-gradient(135deg, #4f46e5 0%, #712ae2 100%)",
-										}}
-									>
-										{isEditingProfile ? "Update Details" : "Edit Profile"}
-									</button>
-								</div>
+
 							</form>
 						</div>
 					</div>

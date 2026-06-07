@@ -9,9 +9,11 @@ import {
     refreshAccessToken,
     getUserProfile,
     updateGithub,
-    updateLinkedIn
+    updateLinkedIn,
+    updateProfilePicture
 } from '../controllers/user.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import { upload } from '../middlewares/multer.middleware';
 
 export const userRouter = Router();
 
@@ -27,3 +29,6 @@ userRouter.route('/socials/update/github').patch(authMiddleware, updateGithub);
 userRouter
     .route('/socials/update/linkedin')
     .patch(authMiddleware, updateLinkedIn);
+userRouter
+    .route('/profile/update/picture')
+    .patch(authMiddleware, upload.single('file'), updateProfilePicture);

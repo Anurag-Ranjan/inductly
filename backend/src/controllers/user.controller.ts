@@ -24,6 +24,8 @@ import {
     phoneSchema
 } from '../validations/profile.validations';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { deleteFile } from '../utils/deleteFile';
+import { removeFileFromCloudinary, uploadImage } from '../utils/cloudinary';
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const data = registerSchema.parse(req.body);
@@ -187,59 +189,19 @@ const onboardUser: RequestHandler = asyncHandler(async (req, res) => {
 
 const updateProfile: RequestHandler = asyncHandler(async (req, res) => {
     const { id } = req.user as tokenPayload;
-    const { gitHub, linkedIn, mobile_number } = req.body;
+    const { mobile_number } = req.body;
 
-    const normalize = (val?: string) => val?.trim() || undefined;
+    if (!mobile_number) throw new ApiError(400, 'Mobile number is required');
 
-    const cleanGithub = normalize(gitHub);
-    const cleanLinkedIn = normalize(linkedIn);
-    const cleanMobile = normalize(mobile_number);
+    const cleanMobile = mobile_number.trim();
 
-    if (cleanGithub) gitHubSchema.parse(cleanGithub);
-    if (cleanLinkedIn) linkedInSchema.parse(cleanLinkedIn);
-    if (cleanMobile) phoneSchema.parse(cleanMobile);
-
-    const existingUser = await prisma.user.findUnique({
-        where: { id },
-        select: {
-            github: true,
-            linkedin: true,
-            mobile_number: true
-        }
-    });
-
-    if (!existingUser) throw new ApiError(404, 'User not found');
-
-    const finalGithub = cleanGithub ?? existingUser.github;
-    const finalLinkedIn = cleanLinkedIn ?? existingUser.linkedin;
-    const finalMobile = cleanMobile ?? existingUser.mobile_number;
-
-    const data: any = {
-        isVerified: !!(finalGithub && finalLinkedIn && finalMobile)
-    };
-
-    if (cleanGithub !== undefined) data.github = cleanGithub;
-    if (cleanLinkedIn !== undefined) data.linkedin = cleanLinkedIn;
-    if (cleanMobile !== undefined) data.mobile_number = cleanMobile;
+    phoneSchema.parse(cleanMobile);
 
     const updatedUser = await prisma.user.update({
         where: { id },
-        data,
+        data: { mobile_number: cleanMobile },
         select: {
-            id: true,
-            name: true,
-            email: true,
-            github: true,
-            linkedin: true,
-            mobile_number: true,
-            batch: true,
-            branch: true,
-            isVerified: true,
-            isProfileComplete: true,
-            isPictureUploaded: true,
-            profile_picture: true,
-            created_at: true,
-            updated_at: true
+            mobile_number: true
         }
     });
 
@@ -416,6 +378,71 @@ const updateLinkedIn: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const updateProfilePicture: RequestHandler = asyncHandler(async (req, res) => {
+    let uploadedFilePath: string | undefined;
+
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    if (!req.file) {
+        throw new ApiError(400, 'No file selected');
+    }
+
+    uploadedFilePath = req.file.path;
+
+    const file = req.file;
+
+    const existingUser = await prisma.user.findUnique({
+        where: {
+            id: user.id
+        },
+        select: {
+            profile_picture: true,
+            picture_public_id: true
+        }
+    });
+
+    if (!existingUser) throw new ApiError(404, 'User not found');
+
+    const response = await uploadImage(file, uploadedFilePath);
+
+    const updatedProfilePicture = await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            profile_picture: response.secure_url,
+            picture_public_id: response.public_id
+        },
+        select: {
+            profile_picture: true
+        }
+    });
+
+    if (
+        existingUser?.picture_public_id &&
+        existingUser.picture_public_id !== response.public_id
+    ) {
+        try {
+            await removeFileFromCloudinary(existingUser.picture_public_id);
+        } catch (err) {
+            console.error('Failed to delete old profile picture', err);
+        }
+    }
+
+    await deleteFile(uploadedFilePath);
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                updatedProfilePicture,
+                'Profile Picture Updated Successfully'
+            )
+        );
+});
+
 export {
     registerUser,
     verifyUser,
@@ -426,5 +453,6 @@ export {
     refreshAccessToken,
     getUserProfile,
     updateGithub,
-    updateLinkedIn
+    updateLinkedIn,
+    updateProfilePicture
 };

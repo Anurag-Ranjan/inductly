@@ -63,3 +63,21 @@ export const updateLinkedInApi = async (payload: {
 	const result = await userApiUtil("/user/socials/update/linkedin", METHODS.patch, payload);
 	return result;
 };
+
+export const updateProfileApi = async (payload: { mobile_number: string }) => {
+	const result = await userApiUtil("/user/profile/update", METHODS.patch, payload);
+	return result;
+};
+
+export const updateProfilePictureApi = async (file: File) => {
+	try {
+		const formData = new FormData();
+		formData.append("file", file);
+		const result = await api.patch("/user/profile/update/picture", formData);
+		return result.data;
+	} catch (error: any) {
+		if (error instanceof AxiosError) {
+			return error.response;
+		}
+	}
+};
