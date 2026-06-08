@@ -3,51 +3,52 @@ import { getUserClubContext } from '../utils/getUserClubContext';
 import { prisma } from '../utils/prisma';
 import { ClubInput } from '../validations/club.validation';
 
-const fetchAllClubs = async (page: number, limit: number) => {
+const fetchAllClubs = async (page: number, limit: number, userId: number) => {
     const skip = (page - 1) * limit;
     const [clubs, total] = await Promise.all([
-        prisma.club.findMany({
-            skip,
+        prisma.membership.findMany({
+            skip: skip,
             take: limit,
             orderBy: {
-                created_at: 'desc'
+                inducted_on: 'asc'
             },
+            where: {
+                user_id: userId
+            },
+
             select: {
                 id: true,
-                name: true,
-                description: true,
-                logo: true,
-                inductions: {
+                role: true,
+                inducted_on: true,
+                club: {
                     select: {
-                        opened_on: true,
-                        closing_on: true
+                        id: true,
+                        name: true,
+                        logo: true,
+                        description: true
                     }
                 }
             }
         }),
-        prisma.club.count()
+        prisma.membership.count({
+            where: {
+                inducted_on: {
+                    not: null
+                }
+            }
+        })
     ]);
 
     const totalPages = Math.ceil(total / limit);
 
     const formattedClubs = clubs.map((club) => {
-        const now = new Date();
-
-        const isOpenForInductions = club.inductions.some((ind) => {
-            return (
-                ind.opened_on &&
-                ind.closing_on &&
-                ind.opened_on <= now &&
-                ind.closing_on >= now
-            );
-        });
-
         return {
-            id: club.id,
-            name: club.name,
-            logo: club.logo,
-            description: club.description,
-            isInducting: isOpenForInductions
+            id: club.club.id,
+            joined_on: club.inducted_on,
+            role: club.role,
+            club_name: club.club.name,
+            logo: club.club.logo,
+            description: club.club.description
         };
     });
 
