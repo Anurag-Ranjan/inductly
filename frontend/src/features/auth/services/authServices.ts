@@ -40,12 +40,14 @@ export const handleUserSignUp = async (dispatch: any, payload: any) => {
 export const handleUserLogout = async (dispatch: any, navigate: any) => {
 	dispatch(setLoading(true));
 	const result = await logoutApi();
-	if (!result.success()) {
-		toast.error("Error Logging out User");
+	if (!result?.success) {
+		toast.error(result?.data?.message || "Error Logging out User");
+		dispatch(setLoading(false));
 		return;
 	}
 	dispatch(clearUser());
-	toast.error("Logged Out Successfully");
+	toast.success("Logged Out Successfully");
+	dispatch(setLoading(false));
 	navigate("/");
 };
 

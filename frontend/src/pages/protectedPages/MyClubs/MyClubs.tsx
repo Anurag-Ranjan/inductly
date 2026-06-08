@@ -229,37 +229,46 @@ export default function MyClubs() {
 			)}
 
 			{/* ── PAGINATION ── */}
-			{clubsData && totalPages > 1 && (
-				<div className="flex items-center justify-center gap-2">
-					<button
-						disabled={!clubsData.hasPrevPage}
-						onClick={() => setPage((p) => p - 1)}
-						className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
-					>
-						<Icon name="chevron_left" className="text-xl" />
-					</button>
-					{Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-						<button
-							key={n}
-							onClick={() => setPage(n)}
-							className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
-								n === page
-									? "bg-indigo-600 text-white"
-									: "text-gray-600 hover:bg-gray-100"
-							}`}
-						>
-							{n}
-						</button>
-					))}
-					<button
-						disabled={!clubsData.hasNextPage}
-						onClick={() => setPage((p) => p + 1)}
-						className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
-					>
-						<Icon name="chevron_right" className="text-xl" />
-					</button>
-				</div>
-			)}
+			{clubsData && totalPages > 1 && (() => {
+				const showingStart = (clubsData.page - 1) * clubsData.limit + 1;
+				const showingEnd = showingStart + clubsData.clubs.length - 1;
+				return (
+					<div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+						<p className="text-sm text-gray-500 whitespace-nowrap">
+							Showing {showingStart} to {showingEnd} of {clubsData.total} clubs
+						</p>
+						<div className="flex items-center gap-2">
+							<button
+								disabled={!clubsData.hasPrevPage}
+								onClick={() => setPage((p) => p - 1)}
+								className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
+							>
+								<Icon name="chevron_left" className="text-xl" />
+							</button>
+							{Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+								<button
+									key={n}
+									onClick={() => setPage(n)}
+									className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+										n === page
+											? "bg-indigo-600 text-white"
+											: "text-gray-600 hover:bg-gray-100"
+									}`}
+								>
+									{n}
+								</button>
+							))}
+							<button
+								disabled={!clubsData.hasNextPage}
+								onClick={() => setPage((p) => p + 1)}
+								className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
+							>
+								<Icon name="chevron_right" className="text-xl" />
+							</button>
+						</div>
+					</div>
+				);
+			})()}
 
 			{/* ── STATS TICKER ── */}
 			{clubsData && (

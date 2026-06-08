@@ -1,4 +1,6 @@
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { handleUserLogout } from "../../../features/auth/services/authServices";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
 	return (
@@ -29,6 +31,8 @@ export default function SideBar({
 	sidebarOpen: boolean;
 	setSidebarOpen: (open: boolean) => void;
 }) {
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 	return (
 		<>
 			<aside
@@ -67,7 +71,10 @@ export default function SideBar({
 				</nav>
 
 				<div className="mt-auto border-t border-gray-200 pt-3">
-					<button className="w-full flex items-center gap-4 text-red-500 hover:bg-red-50 rounded-lg px-4 py-2 text-sm font-medium transition-all">
+					<button
+						onClick={() => handleUserLogout(dispatch, navigate)}
+						className="w-full flex items-center gap-4 text-red-500 hover:bg-red-50 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+					>
 						<Icon name="logout" className="text-xl" />
 						Logout
 					</button>
