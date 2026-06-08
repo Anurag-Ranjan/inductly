@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { getMyClubsServices } from "../../../features/club/services/clubServices";
+import { useState } from "react";
+import { useGetMyClubsQuery } from "../../../features/club/api/clubApi";
+import Loader from "../../../components/loaders/Loader";
 
 function Icon({ name, className = "" }) {
 	return (
@@ -18,7 +18,12 @@ function Icon({ name, className = "" }) {
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 
 function getInitials(name: string) {
-	return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+	return name
+		.split(" ")
+		.map((w) => w[0])
+		.join("")
+		.toUpperCase()
+		.slice(0, 2);
 }
 
 const COLORS = [
@@ -30,7 +35,11 @@ const COLORS = [
 function formatDate(dateStr: string | null) {
 	if (!dateStr) return "—";
 	const d = new Date(dateStr);
-	return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+	return d.toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
 }
 
 function mapClub(club: any, index: number) {
@@ -52,10 +61,34 @@ function mapClub(club: any, index: number) {
 }
 
 const STAT_CONFIG = [
-	{ icon: "verified_user", iconBg: "bg-indigo-50", iconColor: "text-indigo-600", label: "Active Membs", key: "active" },
-	{ icon: "hourglass_empty", iconBg: "bg-purple-50", iconColor: "text-purple-600", label: "Pending", key: "pending" },
-	{ icon: "calendar_today", iconBg: "bg-orange-50", iconColor: "text-orange-700", label: "Next Event", key: "nextEvent" },
-	{ icon: "assignment_late", iconBg: "bg-red-50", iconColor: "text-red-500", label: "Deadlines", key: "deadlines" },
+	{
+		icon: "verified_user",
+		iconBg: "bg-indigo-50",
+		iconColor: "text-indigo-600",
+		label: "Active Membs",
+		key: "active",
+	},
+	{
+		icon: "hourglass_empty",
+		iconBg: "bg-purple-50",
+		iconColor: "text-purple-600",
+		label: "Pending",
+		key: "pending",
+	},
+	{
+		icon: "calendar_today",
+		iconBg: "bg-orange-50",
+		iconColor: "text-orange-700",
+		label: "Next Event",
+		key: "nextEvent",
+	},
+	{
+		icon: "assignment_late",
+		iconBg: "bg-red-50",
+		iconColor: "text-red-500",
+		label: "Deadlines",
+		key: "deadlines",
+	},
 ];
 
 function computeStats(clubs: any[]) {
@@ -73,20 +106,13 @@ function computeStats(clubs: any[]) {
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
 
 export default function MyClubs() {
-	const dispatch = useDispatch();
-	const [clubsData, setClubsData] = useState<any>(null);
 	const [page, setPage] = useState(1);
 	const [query, setQuery] = useState("");
+	const { data, isLoading } = useGetMyClubsQuery(page);
 
-	const fetchClubs = async (p: number) => {
-		const data = await getMyClubsServices(dispatch, p);
-		if (data) setClubsData(data);
-	};
+	if (isLoading) return <Loader />;
 
-	useEffect(() => {
-		fetchClubs(page);
-	}, [page]);
-
+	const clubsData = data?.data;
 	const rawClubs = clubsData?.clubs || [];
 	const clubs = rawClubs.map(mapClub);
 	const stats = computeStats(rawClubs);
@@ -229,46 +255,51 @@ export default function MyClubs() {
 			)}
 
 			{/* ── PAGINATION ── */}
-			{clubsData && totalPages > 1 && (() => {
-				const showingStart = (clubsData.page - 1) * clubsData.limit + 1;
-				const showingEnd = showingStart + clubsData.clubs.length - 1;
-				return (
-					<div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-						<p className="text-sm text-gray-500 whitespace-nowrap">
-							Showing {showingStart} to {showingEnd} of {clubsData.total} clubs
-						</p>
-						<div className="flex items-center gap-2">
-							<button
-								disabled={!clubsData.hasPrevPage}
-								onClick={() => setPage((p) => p - 1)}
-								className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
-							>
-								<Icon name="chevron_left" className="text-xl" />
-							</button>
-							{Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+			{clubsData &&
+				totalPages > 1 &&
+				(() => {
+					const showingStart = (clubsData.page - 1) * clubsData.limit + 1;
+					const showingEnd = showingStart + clubsData.clubs.length - 1;
+					return (
+						<div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+							<p className="text-sm text-gray-500 whitespace-nowrap">
+								Showing {showingStart} to {showingEnd} of {clubsData.total}{" "}
+								clubs
+							</p>
+							<div className="flex items-center gap-2">
 								<button
-									key={n}
-									onClick={() => setPage(n)}
-									className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
-										n === page
-											? "bg-indigo-600 text-white"
-											: "text-gray-600 hover:bg-gray-100"
-									}`}
+									disabled={!clubsData.hasPrevPage}
+									onClick={() => setPage((p) => p - 1)}
+									className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
 								>
-									{n}
+									<Icon name="chevron_left" className="text-xl" />
 								</button>
-							))}
-							<button
-								disabled={!clubsData.hasNextPage}
-								onClick={() => setPage((p) => p + 1)}
-								className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
-							>
-								<Icon name="chevron_right" className="text-xl" />
-							</button>
+								{Array.from({ length: totalPages }, (_, i) => i + 1).map(
+									(n) => (
+										<button
+											key={n}
+											onClick={() => setPage(n)}
+											className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+												n === page
+													? "bg-indigo-600 text-white"
+													: "text-gray-600 hover:bg-gray-100"
+											}`}
+										>
+											{n}
+										</button>
+									),
+								)}
+								<button
+									disabled={!clubsData.hasNextPage}
+									onClick={() => setPage((p) => p + 1)}
+									className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-all"
+								>
+									<Icon name="chevron_right" className="text-xl" />
+								</button>
+							</div>
 						</div>
-					</div>
-				);
-			})()}
+					);
+				})()}
 
 			{/* ── STATS TICKER ── */}
 			{clubsData && (

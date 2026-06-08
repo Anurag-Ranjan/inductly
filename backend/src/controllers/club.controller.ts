@@ -12,6 +12,7 @@ import { ClubInput, clubSchema } from '../validations/club.validation';
 import { prisma } from '../utils/prisma';
 
 const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
+    console.log('Call made');
     if (!req.user) throw new ApiError(401, 'Unauthorised access');
 
     const page = parseInt(req.query.page as string) || 1;
