@@ -272,6 +272,19 @@ const deleteQuestionService = async (questionId: number, formId: number) => {
 //     const response = await prisma.formResponse.findUnique();
 // }
 
+const getFormByInductionService = async (inductionId: number) => {
+    const form = await prisma.form.findFirst({
+        where: { induction_id: inductionId },
+        include: {
+            questions: {
+                orderBy: { order_index: 'asc' }
+            }
+        }
+    });
+
+    return form;
+};
+
 export {
     createFormService,
     createQuestionService,
@@ -279,6 +292,7 @@ export {
     submitFormService,
     publishFormService,
     getFormInformationService,
+    getFormByInductionService,
     updateFormService,
     updateQuestionService,
     deleteQuestionService

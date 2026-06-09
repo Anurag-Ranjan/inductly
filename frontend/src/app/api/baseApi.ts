@@ -13,6 +13,7 @@ export const baseApi = createApi({
 		"MyClubs",
 		"CreateInduction",
 		"Stages",
+		"Form",
 	],
 
 	endpoints: () => ({}),

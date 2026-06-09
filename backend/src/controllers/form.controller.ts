@@ -14,6 +14,7 @@ import {
     createQuestionService,
     createQuestionsService,
     getFormInformationService,
+    getFormByInductionService,
     publishFormService,
     submitFormService,
     updateFormService,
@@ -243,12 +244,34 @@ const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {
     // const response = await getFormResponseService();
 });
 
+const getFormByInduction: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    const inductionId = Number(req.params.inductionId);
+    if (!inductionId || isNaN(inductionId))
+        throw new ApiError(400, 'Invalid induction id');
+
+    const form = await getFormByInductionService(inductionId);
+
+    if (!form) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, null, 'No form found for this induction'));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, form, 'Form fetched successfully'));
+});
+
 export {
     createForm,
     createQuestion,
     submitForm,
     publishForm,
     getFormIndormation,
+    getFormByInduction,
     updateForm,
     updateQuestion,
     deleteQuestion,

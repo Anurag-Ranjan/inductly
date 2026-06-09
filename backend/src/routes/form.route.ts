@@ -5,6 +5,7 @@ import {
     publishForm,
     submitForm,
     getFormIndormation,
+    getFormByInduction,
     updateForm,
     updateQuestion,
     deleteQuestion
@@ -14,7 +15,10 @@ import { authorizeClubRole } from '../middlewares/role.middleware';
 
 const formRouter = Router({ mergeParams: true });
 
-formRouter.route('/').post(authMiddleware, authorizeClubRole, createForm);
+formRouter
+    .route('/')
+    .get(authMiddleware, authorizeClubRole, getFormByInduction)
+    .post(authMiddleware, authorizeClubRole, createForm);
 
 formRouter
     .route('/:formId')

@@ -15,6 +15,7 @@ import ClubDashboard from "../../pages/protectedPages/ClubDashboard/ClubDashboar
 import ClubLayout from "../../components/layouts/ClubLayout";
 import CreateInduction from "../../pages/protectedPages/ClubDashboard/inductions/CreateInduction";
 import CreateStages from "../../pages/protectedPages/ClubDashboard/inductions/CreateStages";
+import CreateForm from "../../pages/protectedPages/ClubDashboard/inductions/CreateForm/CreateForm";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -36,6 +37,10 @@ export const routes = createRoutesFromElements(
 						<Route path="" element={<ClubDashboard />} />
 						<Route path="create-induction" element={<CreateInduction />} />
 						<Route path=":inductionId/add-stages" element={<CreateStages />} />
+						<Route
+							path=":inductionId/create-form/:formId?"
+							element={<CreateForm />}
+						/>
 					</Route>
 				</Route>
 			</Route>
