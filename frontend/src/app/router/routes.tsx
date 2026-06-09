@@ -10,8 +10,11 @@ import Onboarding from "../../pages/protectedPages/Onboarding/Onboarding";
 import Profile from "../../pages/protectedPages/Profile/Profile";
 import ProtectedLayout from "../layout/ProtectedLayout";
 import MyClubs from "../../pages/protectedPages/MyClubs/MyClubs";
-import { ClubLayout } from "../../components/layouts/ClubLayout";
+import { MyClubsLayout } from "../../components/layouts/MyClubLayout";
 import ClubDashboard from "../../pages/protectedPages/ClubDashboard/ClubDashboard";
+import ClubLayout from "../../components/layouts/ClubLayout";
+import CreateInduction from "../../pages/protectedPages/ClubDashboard/inductions/CreateInduction";
+import CreateStages from "../../pages/protectedPages/ClubDashboard/inductions/CreateStages";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -27,9 +30,13 @@ export const routes = createRoutesFromElements(
 			<Route element={<ProtectedLayout />}>
 				<Route path="dashboard" element={<DashBoard />}></Route>
 				<Route path="profile" element={<Profile />}></Route>
-				<Route path="my-clubs" element={<ClubLayout />}>
+				<Route path="my-clubs" element={<MyClubsLayout />}>
 					<Route path="" element={<MyClubs />} />
-					<Route path=":clubId" element={<ClubDashboard />}></Route>
+					<Route path=":clubId" element={<ClubLayout />}>
+						<Route path="" element={<ClubDashboard />} />
+						<Route path="create-induction" element={<CreateInduction />} />
+						<Route path="add-stages" element={<CreateStages />} />
+					</Route>
 				</Route>
 			</Route>
 		</Route>

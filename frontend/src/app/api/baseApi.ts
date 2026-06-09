@@ -6,7 +6,13 @@ export const baseApi = createApi({
 
 	baseQuery: axiosBaseQuery(),
 
-	tagTypes: ["Club", "ClubMembers", "Applications", "MyClubs"],
+	tagTypes: [
+		"Club",
+		"ClubMembers",
+		"Applications",
+		"MyClubs",
+		"CreateInduction",
+	],
 
 	endpoints: () => ({}),
 });

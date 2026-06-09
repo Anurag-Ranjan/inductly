@@ -12,6 +12,8 @@ import {
     createInductionSchema,
     updateInductionSchema
 } from '../validations/induction.validation';
+import { MemberRole } from '@prisma/client';
+import { UserRole } from '../types/roles.types';
 
 const getInductions: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -69,27 +71,17 @@ const getInductionDetails: RequestHandler = asyncHandler(async (req, res) => {
 });
 
 const createInduction: RequestHandler = asyncHandler(async (req, res) => {
-    // enforce admin rules, role check for temporary access
-
     const user = req.user;
     if (!user) throw new ApiError(401, 'Unauthorised');
 
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
     const clubId = parseInt(req.params.clubId as string);
 
-    const isAdmin = await prisma.membership.findUnique({
-        where: {
-            user_id_club_id: {
-                user_id: user.id,
-                club_id: clubId
-            }
-        },
-        select: {
-            role: true
-        }
-    });
+    const isAdmin = role === UserRole.ADMIN;
 
-    if (!isAdmin || !['PRESIDENT', 'ADMIN'].includes(isAdmin.role))
-        throw new ApiError(403, 'Forbidden');
+    if (!isAdmin) throw new ApiError(403, 'Forbidden');
 
     const parsedData = createInductionSchema.parse(req.body);
 

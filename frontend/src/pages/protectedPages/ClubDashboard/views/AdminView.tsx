@@ -1,4 +1,8 @@
+import { useNavigate, useParams } from "react-router";
+
 export default function AdminView() {
+	const cludId = useParams();
+	const navigate = useNavigate();
 	return (
 		<div className="max-w-7xl mx-auto space-y-8">
 			{/* Welcome Header */}
@@ -16,7 +20,12 @@ export default function AdminView() {
 					<button className="bg-white border border-slate-200 text-slate-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
 						Download Report
 					</button>
-					<button className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all active:scale-95 shadow-sm">
+					<button
+						onClick={() => {
+							navigate(`create-induction`);
+						}}
+						className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all active:scale-95 shadow-sm"
+					>
 						Create Induction
 					</button>
 				</div>
