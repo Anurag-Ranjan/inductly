@@ -54,7 +54,6 @@ export default function SideBar({
 						<NavLink
 							key={label}
 							to={path}
-							end
 							onClick={() => setSidebarOpen(false)}
 							className={({ isActive }) =>
 								`w-full flex items-center gap-4 rounded-lg px-4 py-2 text-sm font-medium transition-all text-left ${

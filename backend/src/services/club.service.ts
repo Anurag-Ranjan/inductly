@@ -1,3 +1,4 @@
+import { tokenPayload } from '../types/jwt.types';
 import { ApiError } from '../utils/ApiError';
 import { getUserClubContext } from '../utils/getUserClubContext';
 import { prisma } from '../utils/prisma';
@@ -77,6 +78,7 @@ const getBaseClub = async (clubId: number) => {
             website: true,
             instagram: true,
             linkedin: true,
+
             inductions: {
                 select: {
                     id: true,
@@ -92,7 +94,7 @@ const getBaseClub = async (clubId: number) => {
 
 //visitor level view
 
-const getVisitorView = async (clubId: number, hasApplied: boolean) => {
+const getVisitorView = async (clubId: number, userId: Number) => {
     const club = await getBaseClub(clubId);
 
     if (!club) return null;
@@ -103,10 +105,29 @@ const getVisitorView = async (clubId: number, hasApplied: boolean) => {
         return ind.opened_on! <= now && ind.closing_on! >= now;
     });
 
+    const members = await prisma.membership.findMany({
+        where: {
+            club_id: clubId
+        },
+        select: {
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                    linkedin: true,
+                    batch: true,
+                    branch: true
+                }
+            },
+            role: true
+        }
+    });
+
     return {
         ...club,
-        canApply: isInductionOpen && !hasApplied,
-        hasApplied
+        isInductionOpen,
+        members,
+        role: 'VISITOR'
     };
 };
 
@@ -131,6 +152,7 @@ const getMemberView = async (clubId: number, userId: number) => {
                     profile_picture: true,
                     email: true,
                     mobile_number: true,
+                    linkedin: true,
                     branch: true,
                     batch: true
                 }
@@ -140,48 +162,62 @@ const getMemberView = async (clubId: number, userId: number) => {
 
     return {
         ...club,
-        members
+        members,
+        role: 'MEMBER'
     };
 };
 
 //admin view
 // needs some changes
 
-const getAdminView = async (clubId: number) => {
+const getAdminView = async (clubId: number, userId: number) => {
     const club = await getBaseClub(clubId);
     if (!club) return null;
 
-    const [members] = await prisma.membership.findMany({
-        where: { club_id: clubId },
+    const members = await prisma.membership.findMany({
+        where: {
+            club_id: clubId,
+            user_id: {
+                not: userId
+            }
+        },
         select: {
             role: true,
             user: {
                 select: {
                     id: true,
                     name: true,
-                    profile_pic: true
+                    profile_picture: true,
+                    batch: true,
+                    branch: true,
+                    email: true,
+                    linkedin: true
                 }
             }
         }
     });
+
     return {
         ...club,
-        members
+        members,
+        role: 'ADMIN'
     };
 };
 
-const fetchClubDetails = async (clubId: number, userId: number) => {
-    const context = await getUserClubContext(userId, clubId);
-
-    if (context.accessLevel === 0) {
-        return getVisitorView(clubId, context.hasApplied);
+const fetchClubDetails = async (
+    role: string,
+    user: tokenPayload,
+    clubId: number
+) => {
+    if (role === 'VISITOR') {
+        return getVisitorView(clubId, user.id);
     }
 
-    if (context.accessLevel === 1) {
-        return getMemberView(clubId, userId);
+    if (role === 'MEMBER') {
+        return getMemberView(clubId, user.id);
     }
 
-    return getAdminView(clubId);
+    return getAdminView(clubId, user.id);
 };
 
 const createClub = async (data: ClubInput, creatorId: number) => {

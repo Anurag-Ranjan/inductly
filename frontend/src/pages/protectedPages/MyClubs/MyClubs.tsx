@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetMyClubsQuery } from "../../../features/club/api/clubApi";
 import Loader from "../../../components/loaders/Loader";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
 
 function Icon({ name, className = "" }) {
 	return (
@@ -108,9 +110,16 @@ function computeStats(clubs: any[]) {
 export default function MyClubs() {
 	const [page, setPage] = useState(1);
 	const [query, setQuery] = useState("");
-	const { data, isLoading } = useGetMyClubsQuery(page);
+	const { data, isLoading, error, isError } = useGetMyClubsQuery(page);
+	const navigate = useNavigate();
 
 	if (isLoading) return <Loader />;
+
+	// useEffect(() => {
+	// 	if (isError) {
+	// 		toast.error((error as any)?.data?.message ?? "Failed to load club");
+	// 	}
+	// }, [error, isError]);
 
 	const clubsData = data?.data;
 	const rawClubs = clubsData?.clubs || [];
@@ -221,7 +230,12 @@ export default function MyClubs() {
 							</div>
 
 							{/* CTA button */}
-							<button className="w-full mt-1 py-2 bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 transition-all duration-200 rounded-lg text-sm font-medium flex items-center justify-center gap-1 active:scale-[0.98]">
+							<button
+								onClick={() => {
+									navigate(`/my-clubs/${club.id}`);
+								}}
+								className="w-full mt-1 py-2 bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 transition-all duration-200 rounded-lg text-sm font-medium flex items-center justify-center gap-1 active:scale-[0.98]"
+							>
 								View Club
 								<Icon name="arrow_forward" className="text-sm" />
 							</button>

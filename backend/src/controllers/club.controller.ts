@@ -12,7 +12,6 @@ import { ClubInput, clubSchema } from '../validations/club.validation';
 import { prisma } from '../utils/prisma';
 
 const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
-    console.log('Call made');
     if (!req.user) throw new ApiError(401, 'Unauthorised access');
 
     const page = parseInt(req.query.page as string) || 1;
@@ -26,12 +25,14 @@ const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
 });
 
 const getClubDetails: RequestHandler = asyncHandler(async (req, res) => {
-    const clubId = parseInt(req.params.id as string);
-    const userId = req.user?.id;
+    const user = req.user;
+    const role = req.role;
+    const clubId = Number(req.params.clubId);
 
-    if (!clubId || !userId) throw new ApiError(401, 'Unauthorised Request');
+    if (!clubId || isNaN(clubId)) throw new ApiError(400, 'Invalid club id');
+    if (!role || !user) throw new ApiError(401, 'Unauthorised Request');
 
-    const club = await fetchClubDetails(clubId, userId);
+    const club = await fetchClubDetails(role, user, clubId);
 
     if (!club) throw new ApiError(404, 'Club not found');
 

@@ -10,6 +10,8 @@ import Onboarding from "../../pages/protectedPages/Onboarding/Onboarding";
 import Profile from "../../pages/protectedPages/Profile/Profile";
 import ProtectedLayout from "../layout/ProtectedLayout";
 import MyClubs from "../../pages/protectedPages/MyClubs/MyClubs";
+import { ClubLayout } from "../../components/layouts/ClubLayout";
+import ClubDashboard from "../../pages/protectedPages/ClubDashboard/ClubDashboard";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -25,7 +27,10 @@ export const routes = createRoutesFromElements(
 			<Route element={<ProtectedLayout />}>
 				<Route path="dashboard" element={<DashBoard />}></Route>
 				<Route path="profile" element={<Profile />}></Route>
-				<Route path="my-clubs" element={<MyClubs />}></Route>
+				<Route path="my-clubs" element={<ClubLayout />}>
+					<Route path="" element={<MyClubs />} />
+					<Route path=":clubId" element={<ClubDashboard />}></Route>
+				</Route>
 			</Route>
 		</Route>
 	</>,
