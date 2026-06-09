@@ -19,6 +19,43 @@ const optionSchema = z.object({
   value: z.string().min(1),
 });
 
+export const updateFormSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, 'Title cannot be empty')
+            .max(100, 'Title cannot exceed 100 characters')
+            .optional(),
+        description: z
+            .string()
+            .trim()
+            .max(1000, 'Description cannot exceed 1000 characters')
+            .nullable()
+            .optional()
+    })
+    .refine((data) => data.title !== undefined || data.description !== undefined, {
+        message: 'At least one field (title or description) must be provided'
+    });
+
+export const updateQuestionSchema = z
+    .object({
+        question_text: z.string().trim().min(3).optional(),
+        question_type: QuestionTypeEnum.optional(),
+        order_index: z.number().int().min(0).optional(),
+        is_required: z.boolean().optional(),
+        metadata: z.any().optional()
+    })
+    .refine(
+        (data) =>
+            data.question_text !== undefined ||
+            data.question_type !== undefined ||
+            data.order_index !== undefined ||
+            data.is_required !== undefined ||
+            data.metadata !== undefined,
+        { message: 'At least one field must be provided' }
+    );
+
 export const createQuestionSchema = z.discriminatedUnion("question_type", [
   // TEXT
   z.object({
@@ -115,3 +152,5 @@ export const createQuestionSchema = z.discriminatedUnion("question_type", [
       .optional(),
   }),
 ]);
+
+export const createQuestionsSchema = z.array(createQuestionSchema).min(1, 'At least one question is required');

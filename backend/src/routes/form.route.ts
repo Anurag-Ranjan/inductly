@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import {
     createForm,
+    createQuestion,
     publishForm,
     submitForm,
-    getFormIndormation
+    getFormIndormation,
+    updateForm,
+    updateQuestion,
+    deleteQuestion
 } from '../controllers/form.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
@@ -11,18 +15,27 @@ import { authorizeClubRole } from '../middlewares/role.middleware';
 const formRouter = Router({ mergeParams: true });
 
 formRouter.route('/').post(authMiddleware, authorizeClubRole, createForm);
+
 formRouter
     .route('/:formId')
-    .post(authMiddleware, authorizeClubRole, createForm);
-//Change the route of the create form functionality
+    .get(authMiddleware, authorizeClubRole, getFormIndormation)
+    .patch(authMiddleware, authorizeClubRole, updateForm);
+
 formRouter
-    .route('/:formId/applications/:applicationId')
-    .post(authMiddleware, authorizeClubRole, submitForm);
+    .route('/:formId/questions')
+    .post(authMiddleware, authorizeClubRole, createQuestion);
+
+formRouter
+    .route('/:formId/questions/:questionId')
+    .patch(authMiddleware, authorizeClubRole, updateQuestion)
+    .delete(authMiddleware, authorizeClubRole, deleteQuestion);
+
 formRouter
     .route('/:formId/publish')
     .post(authMiddleware, authorizeClubRole, publishForm);
+
 formRouter
-    .route('/:formId')
-    .get(authMiddleware, authorizeClubRole, getFormIndormation);
+    .route('/:formId/applications/:applicationId')
+    .post(authMiddleware, authorizeClubRole, submitForm);
 
 export { formRouter };

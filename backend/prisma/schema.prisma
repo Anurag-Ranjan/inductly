@@ -233,7 +233,8 @@ model Form {
   title        String
   description  String?
   created_at   DateTime @default(now())
-  isPublished  Boolean
+  updated_at   DateTime @updatedAt
+  isPublished  Boolean  @default(false)
 
   induction Induction      @relation(fields: [induction_id], references: [id], onDelete: Cascade)
   questions FormQuestion[]
@@ -252,6 +253,7 @@ model FormQuestion {
   metadata      Json?
   is_required   Boolean      @default(false)
   created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
 
   form    Form         @relation(fields: [form_id], references: [id], onDelete: Cascade)
   answers FormAnswer[]

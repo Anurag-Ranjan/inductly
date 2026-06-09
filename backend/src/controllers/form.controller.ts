@@ -4,14 +4,21 @@ import { ApiError } from '../utils/ApiError';
 import { RequestHandler, response } from 'express';
 import {
     createQuestionSchema,
-    formSchema
+    createQuestionsSchema,
+    formSchema,
+    updateFormSchema,
+    updateQuestionSchema
 } from '../validations/form.validations';
 import {
     createFormService,
     createQuestionService,
+    createQuestionsService,
     getFormInformationService,
     publishFormService,
-    submitFormService
+    submitFormService,
+    updateFormService,
+    updateQuestionService,
+    deleteQuestionService
 } from '../services/form.service';
 import { UserRole } from '../types/roles.types';
 
@@ -45,6 +52,23 @@ const createQuestion: RequestHandler = asyncHandler(async (req, res) => {
     if (!role) throw new ApiError(403, 'Unauthorized');
 
     const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    if (Array.isArray(req.body)) {
+        const questionsData = createQuestionsSchema.parse(req.body);
+
+        const createdQuestions = await createQuestionsService(formId, questionsData);
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    createdQuestions,
+                    'Questions created successfully'
+                )
+            );
+    }
 
     const questionData = createQuestionSchema.parse(req.body);
 
@@ -135,9 +159,80 @@ const getFormIndormation: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, form, 'Form fetched suceesfully'));
 });
 
-// const updateForm: RequestHandler = asyncHandler(async (req, res) => {
+const updateForm: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
 
-// });
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const clubId = Number(req.params.clubId);
+    if (!clubId || isNaN(clubId)) throw new ApiError(400, 'Invalid club id');
+
+    const data = updateFormSchema.parse(req.body);
+
+    const updatedForm = await updateFormService({ formId, clubId, ...data });
+
+    if (!updatedForm) throw new ApiError(500, 'Internal Server Error');
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updatedForm, 'Form updated successfully'));
+});
+
+const updateQuestion: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const questionId = Number(req.params.questionId);
+    if (!questionId || isNaN(questionId)) throw new ApiError(400, 'Invalid question id');
+
+    const data = updateQuestionSchema.parse(req.body);
+
+    const updatedQuestion = await updateQuestionService({
+        questionId,
+        formId,
+        ...data
+    });
+
+    if (!updatedQuestion) throw new ApiError(500, 'Internal Server Error');
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedQuestion, 'Question updated successfully')
+        );
+});
+
+const deleteQuestion: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const questionId = Number(req.params.questionId);
+    if (!questionId || isNaN(questionId)) throw new ApiError(400, 'Invalid question id');
+
+    const deletedQuestion = await deleteQuestionService(questionId, formId);
+
+    if (!deletedQuestion) throw new ApiError(500, 'Internal Server Error');
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, deletedQuestion, 'Question deleted successfully')
+        );
+});
 
 const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -154,6 +249,8 @@ export {
     submitForm,
     publishForm,
     getFormIndormation,
-    // updateForm,
+    updateForm,
+    updateQuestion,
+    deleteQuestion,
     getFormResponse
 };

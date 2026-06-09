@@ -25,6 +25,23 @@ type answerParams = {
     answers: Array<{ question_id: number; answer: string }>;
 };
 
+type updateFormParams = {
+    formId: number;
+    clubId: number;
+    title?: string | undefined;
+    description?: string | null | undefined;
+};
+
+type updateQuestionParams = {
+    questionId: number;
+    formId: number;
+    question_text?: string | undefined;
+    question_type?: QuestionType | undefined;
+    order_index?: number | undefined;
+    is_required?: boolean | undefined;
+    metadata?: any;
+};
+
 const createFormService = async (params: formParams) => {
     const { role, inductionId, title, description } = params;
     if (role === UserRole.VISITOR || role === UserRole.MEMBER)
@@ -70,6 +87,31 @@ const createQuestionService = async (params: questionParams) => {
     });
 
     return createdQuestion;
+};
+
+const createQuestionsService = async (formId: number, questions: Omit<questionParams, 'formId'>[]) => {
+    const form = await prisma.form.findUnique({
+        where: { id: formId }
+    });
+
+    if (!form) throw new ApiError(404, 'Form not found');
+
+    const createdQuestions = await prisma.$transaction(
+        questions.map((q) =>
+            prisma.formQuestion.create({
+                data: {
+                    form_id: formId,
+                    question_text: q.question_text,
+                    question_type: q.question_type,
+                    order_index: q.order_index,
+                    is_required: q.is_required ?? false,
+                    metadata: q.metadata ?? undefined
+                }
+            })
+        )
+    );
+
+    return createdQuestions;
 };
 
 const submitFormService = async (params: answerParams) => {
@@ -165,6 +207,67 @@ const getFormInformationService = async (formId: number, clubId: number) => {
     return form;
 };
 
+const updateFormService = async (params: updateFormParams) => {
+    const { formId, clubId, title, description } = params;
+
+    const form = await prisma.form.findUnique({
+        where: { id: formId },
+        include: { induction: { select: { club_id: true } } }
+    });
+
+    if (!form) throw new ApiError(404, 'Form not found');
+    if (form.induction.club_id !== clubId) throw new ApiError(403, 'Unauthorised');
+
+    const updateData: Record<string, any> = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+
+    const updatedForm = await prisma.form.update({
+        where: { id: formId },
+        data: updateData
+    });
+
+    return updatedForm;
+};
+
+const updateQuestionService = async (params: updateQuestionParams) => {
+    const { questionId, formId, ...data } = params;
+
+    const question = await prisma.formQuestion.findFirst({
+        where: { id: questionId, form_id: formId }
+    });
+
+    if (!question) throw new ApiError(404, 'Question not found');
+
+    const updateData: Record<string, any> = {};
+    if (data.question_text !== undefined) updateData.question_text = data.question_text;
+    if (data.question_type !== undefined) updateData.question_type = data.question_type;
+    if (data.order_index !== undefined) updateData.order_index = data.order_index;
+    if (data.is_required !== undefined) updateData.is_required = data.is_required;
+    if (data.metadata !== undefined) updateData.metadata = data.metadata;
+
+    const updatedQuestion = await prisma.formQuestion.update({
+        where: { id: questionId },
+        data: updateData
+    });
+
+    return updatedQuestion;
+};
+
+const deleteQuestionService = async (questionId: number, formId: number) => {
+    const question = await prisma.formQuestion.findFirst({
+        where: { id: questionId, form_id: formId }
+    });
+
+    if (!question) throw new ApiError(404, 'Question not found');
+
+    await prisma.formQuestion.delete({
+        where: { id: questionId }
+    });
+
+    return question;
+};
+
 // const getFormResponseService = async (formId:number, applicationId: number, inductionId: number) => {
 //     const response = await prisma.formResponse.findUnique();
 // }
@@ -172,7 +275,11 @@ const getFormInformationService = async (formId: number, clubId: number) => {
 export {
     createFormService,
     createQuestionService,
+    createQuestionsService,
     submitFormService,
     publishFormService,
-    getFormInformationService
+    getFormInformationService,
+    updateFormService,
+    updateQuestionService,
+    deleteQuestionService
 };
