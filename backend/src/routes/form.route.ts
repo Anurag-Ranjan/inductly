@@ -8,7 +8,7 @@ import {
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
 
-const formRouter = Router();
+const formRouter = Router({ mergeParams: true });
 
 formRouter.route('/').post(authMiddleware, authorizeClubRole, createForm);
 formRouter

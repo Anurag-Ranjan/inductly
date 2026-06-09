@@ -8,7 +8,7 @@ import {
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
 
-export const inductionRouter = Router();
+export const inductionRouter = Router({ mergeParams: true });
 
 inductionRouter.route('/').get(authMiddleware, getInductions);
 inductionRouter.route('/:id').get(authMiddleware, getInductionDetails);

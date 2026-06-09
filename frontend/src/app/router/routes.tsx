@@ -35,7 +35,7 @@ export const routes = createRoutesFromElements(
 					<Route path=":clubId" element={<ClubLayout />}>
 						<Route path="" element={<ClubDashboard />} />
 						<Route path="create-induction" element={<CreateInduction />} />
-						<Route path="add-stages" element={<CreateStages />} />
+						<Route path=":inductionId/add-stages" element={<CreateStages />} />
 					</Route>
 				</Route>
 			</Route>

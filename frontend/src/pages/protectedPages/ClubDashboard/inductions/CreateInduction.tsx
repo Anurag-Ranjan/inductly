@@ -1,20 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
+import { useCreateInductionMutation } from "../../../../features/induction/inductionApi";
 
 export default function CreateInduction() {
 	const { clubId } = useParams();
 	const { isAdmin } = useOutletContext<any>();
 	const navigate = useNavigate();
-	console.log(isAdmin);
+	const [createInduction, { isLoading }] = useCreateInductionMutation();
+	const [title, setTitle] = useState("");
+	const [description, setDescription] = useState("");
 
 	useEffect(() => {
-		if (!isAdmin) navigate(`/my-clubs/${clubId}`);
-	}, []);
+		if (!isAdmin) navigate(`/my-clubs/${clubId}`, { replace: true });
+	}, [isAdmin, clubId, navigate]);
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
-		// Handle form submission logic here
-		alert("Moving to Step 2: Content Modules");
+		try {
+			const response = await createInduction({
+				body: { title, description },
+				clubId: Number(clubId),
+			}).unwrap();
+			const inductionId = response.data.id;
+			navigate(`/my-clubs/${clubId}/${inductionId}/add-stages`);
+		} catch (err) {
+			console.error("Failed to create induction:", err);
+		}
 	};
 
 	return (
@@ -99,6 +110,8 @@ export default function CreateInduction() {
 										name="induction_title"
 										placeholder="e.g. Science Club Membership 2024"
 										type="text"
+										value={title}
+										onChange={(e) => setTitle(e.target.value)}
 										required
 									/>
 								</div>
@@ -122,6 +135,8 @@ export default function CreateInduction() {
 										name="induction_description"
 										placeholder="Describe the purpose, requirements, and what candidates should expect from this induction process..."
 										rows={4}
+										value={description}
+										onChange={(e) => setDescription(e.target.value)}
 										required
 									></textarea>
 								</div>
@@ -137,13 +152,42 @@ export default function CreateInduction() {
 								Save as Draft
 							</button>
 							<button
-								className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-2.5 rounded-lg text-sm font-medium text-white shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2"
+								className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-2.5 rounded-lg text-sm font-medium text-white shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
 								type="submit"
+								disabled={isLoading}
 							>
-								<span>Add Stages</span>
-								<span className="material-symbols-outlined text-[18px]">
-									arrow_forward
-								</span>
+								{isLoading ? (
+									<>
+										<svg
+											className="animate-spin h-5 w-5 text-white"
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												className="opacity-25"
+												cx="12"
+												cy="12"
+												r="10"
+												stroke="currentColor"
+												strokeWidth="4"
+											/>
+											<path
+												className="opacity-75"
+												fill="currentColor"
+												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+											/>
+										</svg>
+										<span>Creating...</span>
+									</>
+								) : (
+									<>
+										<span>Add Stages</span>
+										<span className="material-symbols-outlined text-[18px]">
+											arrow_forward
+										</span>
+									</>
+								)}
 							</button>
 						</div>
 					</form>

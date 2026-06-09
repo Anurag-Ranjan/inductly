@@ -12,6 +12,7 @@ export const baseApi = createApi({
 		"Applications",
 		"MyClubs",
 		"CreateInduction",
+		"Stages",
 	],
 
 	endpoints: () => ({}),

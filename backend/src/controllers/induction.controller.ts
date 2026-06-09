@@ -102,7 +102,7 @@ const createInduction: RequestHandler = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 createdInduction,
-                'Induction registered successfuly'
+                'Induction registered successfully'
             )
         );
 });

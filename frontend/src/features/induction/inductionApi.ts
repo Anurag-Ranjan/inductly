@@ -16,7 +16,47 @@ const inductionsApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["CreateInduction", "Club"],
 		}),
+		getInductions: builder.query({
+			query: (clubId: string | number) => ({
+				url: `/clubs/${clubId}/inductions`,
+				method: "GET",
+			}),
+		}),
+		getStages: builder.query({
+			query: ({
+				clubId,
+				inductionId,
+			}: {
+				clubId: string | number;
+				inductionId: string | number;
+			}) => ({
+				url: `/clubs/${clubId}/inductions/${inductionId}/stages`,
+				method: "GET",
+			}),
+			providesTags: ["Stages"],
+		}),
+		createStages: builder.mutation({
+			query: ({
+				clubId,
+				inductionId,
+				body,
+			}: {
+				clubId: string | number;
+				inductionId: string | number;
+				body: { name: string; description?: string | null; order_index: number }[];
+			}) => ({
+				url: `/clubs/${clubId}/inductions/${inductionId}/stages`,
+				method: "POST",
+				data: body,
+			}),
+			invalidatesTags: ["Stages"],
+		}),
 	}),
 });
 
-export const { useCreateInductionMutation } = inductionsApi;
+export const {
+	useCreateInductionMutation,
+	useGetInductionsQuery,
+	useGetStagesQuery,
+	useCreateStagesMutation,
+} = inductionsApi;

@@ -7,7 +7,9 @@ import { userRouter } from './user.route';
 import { formRouter } from './form.route';
 import { Router } from 'express';
 
-const router = Router();
+const router = Router({
+    mergeParams: true
+});
 
 router.use('/health', healthRouter);
 router.use('/user', userRouter);
@@ -15,6 +17,6 @@ router.use('/dashboard', dashboardRouter);
 router.use('/clubs', clubRouter);
 router.use('/clubs/:clubId/inductions', inductionRouter);
 router.use('/clubs/:clubId/inductions/:inductionId/stages', stageRouter);
-router.use('clubs/:clubId/inductions/:inductionId/form', formRouter);
+router.use('/clubs/:clubId/inductions/:inductionId/form', formRouter);
 
 export default router;

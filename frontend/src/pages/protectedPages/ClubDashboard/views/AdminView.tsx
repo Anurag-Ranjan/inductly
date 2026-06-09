@@ -1,8 +1,12 @@
 import { useNavigate, useParams } from "react-router";
+import { useGetInductionsQuery } from "../../../../features/induction/inductionApi";
+import Loader from "../../../../components/loaders/Loader";
 
 export default function AdminView() {
-	const cludId = useParams();
+	const { clubId } = useParams();
 	const navigate = useNavigate();
+	const { data, isLoading } = useGetInductionsQuery(Number(clubId));
+	const inductions = data?.data ?? [];
 	return (
 		<div className="max-w-7xl mx-auto space-y-8">
 			{/* Welcome Header */}
@@ -159,100 +163,73 @@ export default function AdminView() {
 						Induction Management
 					</h2>
 				</div>
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-					{/* Induction Card 1 */}
-					<div className="bg-white/80 backdrop-blur-md border border-slate-200 border-l-4 border-l-indigo-600 p-6 rounded-xl shadow-sm space-y-6">
-						<div className="flex justify-between">
-							<div>
-								<span className="bg-indigo-100 text-indigo-900 text-xs font-semibold tracking-wide px-2 py-1 rounded-full">
-									Recruitment
-								</span>
-								<h3 className="text-xl font-semibold mt-2">
-									Core Committee '24
+				{isLoading ? (
+					<Loader />
+				) : (
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						{inductions.map((induction) => (
+							<div
+								key={induction.id}
+								className="bg-white/80 backdrop-blur-md border border-slate-200 border-l-4 border-l-indigo-600 p-6 rounded-xl shadow-sm space-y-6"
+							>
+								<div>
+									<h3 className="text-xl font-semibold">{induction.title}</h3>
+									{induction.description && (
+										<p className="text-sm text-slate-500 mt-1 line-clamp-2">
+											{induction.description}
+										</p>
+									)}
+								</div>
+								<div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-200">
+									<div>
+										<p className="text-xs font-semibold tracking-wide text-slate-600">
+											Applicants
+										</p>
+										<p className="text-xl font-semibold text-slate-900">
+											{induction.applicationCount}
+										</p>
+									</div>
+									<div>
+										<p className="text-xs font-semibold tracking-wide text-slate-600">
+											Status
+										</p>
+										<p className="text-xl font-semibold text-slate-900">
+											{induction.is_published ? "Open" : "Draft"}
+										</p>
+									</div>
+								</div>
+								<div className="flex gap-2">
+									<button
+										onClick={() =>
+											navigate(
+												`/my-clubs/${clubId}/${induction.id}/add-stages`,
+											)
+										}
+										className="flex-1 bg-slate-100 text-slate-900 text-sm font-medium py-2 rounded-lg hover:bg-slate-200 transition-all active:scale-95"
+									>
+										Edit Stages
+									</button>
+								</div>
+							</div>
+						))}
+						<button
+							onClick={() => navigate("create-induction")}
+							className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-indigo-600 group transition-all bg-slate-50/50 hover:bg-slate-50 cursor-pointer"
+						>
+							<div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all text-indigo-600">
+								<span className="material-symbols-outlined">add</span>
+							</div>
+							<div className="text-center">
+								<h3 className="text-xl font-semibold text-slate-900">
+									Start New Induction
 								</h3>
-							</div>
-							<button className="text-slate-600 hover:text-indigo-600 transition-colors">
-								<span className="material-symbols-outlined">more_vert</span>
-							</button>
-						</div>
-						<div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-200">
-							<div>
-								<p className="text-xs font-semibold tracking-wide text-slate-600">
-									Applicants
+								<p className="text-sm text-slate-600 mt-1">
+									Launch a new recruitment drive
 								</p>
-								<p className="text-xl font-semibold text-slate-900">1,120</p>
 							</div>
-							<div>
-								<p className="text-xs font-semibold tracking-wide text-slate-600">
-									Open Positions
-								</p>
-								<p className="text-xl font-semibold text-slate-900">15</p>
-							</div>
-						</div>
-						<div className="flex gap-2">
-							<button className="flex-1 bg-slate-100 text-slate-900 text-sm font-medium py-2 rounded-lg hover:bg-slate-200 transition-all active:scale-95">
-								Edit
-							</button>
-							<button className="flex-1 bg-red-100 text-red-900 text-sm font-medium py-2 rounded-lg hover:bg-opacity-80 transition-all active:scale-95">
-								Close
-							</button>
-						</div>
+						</button>
 					</div>
-
-					{/* Induction Card 2 */}
-					<div className="bg-white/80 backdrop-blur-md border border-slate-200 border-l-4 border-l-purple-600 p-6 rounded-xl shadow-sm space-y-6">
-						<div className="flex justify-between">
-							<div>
-								<span className="bg-purple-100 text-purple-900 text-xs font-semibold tracking-wide px-2 py-1 rounded-full">
-									Chapter Hunt
-								</span>
-								<h3 className="text-xl font-semibold mt-2">
-									Design &amp; Media
-								</h3>
-							</div>
-							<button className="text-slate-600 hover:text-indigo-600 transition-colors">
-								<span className="material-symbols-outlined">more_vert</span>
-							</button>
-						</div>
-						<div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-200">
-							<div>
-								<p className="text-xs font-semibold tracking-wide text-slate-600">
-									Applicants
-								</p>
-								<p className="text-xl font-semibold text-slate-900">432</p>
-							</div>
-							<div>
-								<p className="text-xs font-semibold tracking-wide text-slate-600">
-									Open Positions
-								</p>
-								<p className="text-xl font-semibold text-slate-900">8</p>
-							</div>
-						</div>
-						<div className="flex gap-2">
-							<button className="flex-1 bg-slate-100 text-slate-900 text-sm font-medium py-2 rounded-lg hover:bg-slate-200 transition-all active:scale-95">
-								Edit
-							</button>
-							<button className="flex-1 bg-red-100 text-red-900 text-sm font-medium py-2 rounded-lg hover:bg-opacity-80 transition-all active:scale-95">
-								Close
-							</button>
-						</div>
-					</div>
-
-					{/* Create New Card */}
-					<button className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-indigo-600 group transition-all bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
-						<div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all text-indigo-600">
-							<span className="material-symbols-outlined">add</span>
-						</div>
-						<div className="text-center">
-							<h3 className="text-xl font-semibold text-slate-900">
-								Start New Induction
-							</h3>
-							<p className="text-sm text-slate-600 mt-1">
-								Launch a new recruitment drive
-							</p>
-						</div>
-					</button>
-				</div>
+				)}
 			</section>
 
 			{/* Member Management Table */}
