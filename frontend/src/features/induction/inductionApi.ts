@@ -16,6 +16,14 @@ const inductionsApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["CreateInduction", "Club"],
 		}),
+		getOpenInductions: builder.query({
+			query: (page: number = 1) => ({
+				url: `/inductions/open`,
+				method: "GET",
+				params: { page },
+			}),
+			providesTags: ["OpenInductions"],
+		}),
 		getInductions: builder.query({
 			query: (clubId: string | number) => ({
 				url: `/clubs/${clubId}/inductions`,
@@ -43,7 +51,11 @@ const inductionsApi = baseApi.injectEndpoints({
 			}: {
 				clubId: string | number;
 				inductionId: string | number;
-				body: { name: string; description?: string | null; order_index: number }[];
+				body: {
+					name: string;
+					description?: string | null;
+					order_index: number;
+				}[];
 			}) => ({
 				url: `/clubs/${clubId}/inductions/${inductionId}/stages`,
 				method: "POST",
@@ -59,4 +71,5 @@ export const {
 	useGetInductionsQuery,
 	useGetStagesQuery,
 	useCreateStagesMutation,
+	useGetOpenInductionsQuery,
 } = inductionsApi;

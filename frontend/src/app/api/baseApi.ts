@@ -14,6 +14,7 @@ export const baseApi = createApi({
 		"CreateInduction",
 		"Stages",
 		"Form",
+		"OpenInductions",
 	],
 
 	endpoints: () => ({}),

@@ -203,4 +203,58 @@ const updateInductionDates = async (
     return publishedInduction;
 };
 
-export { fetchInductions, fetchInductionDetails, updateInductionDates };
+const fetchAllOpenInductions = async (page: number = 1, limit: number = 6) => {
+    const now = new Date();
+    const skip = (page - 1) * limit;
+
+    const [inductions, total] = await Promise.all([
+        prisma.induction.findMany({
+            where: {
+                opened_on: { not: null },
+                closing_on: { gt: now }
+            },
+            include: {
+                club: {
+                    select: {
+                        name: true,
+                        logo: true
+                    }
+                }
+            },
+            orderBy: { created_at: 'desc' },
+            skip,
+            take: limit
+        }),
+        prisma.induction.count({
+            where: {
+                opened_on: { not: null },
+                closing_on: { gt: now }
+            }
+        })
+    ]);
+
+    const data = inductions.map((induction) => ({
+        inductionId: induction.id,
+        clubId: induction.club_id,
+        clubName: induction.club.name,
+        inductionTitle: induction.title,
+        clubLogo: induction.club.logo,
+        inductionDescription: induction.description,
+        startDate: induction.opened_on,
+        closeDate: induction.closing_on
+    }));
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        inductions: data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+    };
+};
+
+export { fetchInductions, fetchInductionDetails, updateInductionDates, fetchAllOpenInductions };

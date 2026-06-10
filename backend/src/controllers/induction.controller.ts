@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError';
 import { prisma } from '../utils/prisma';
 import { RequestHandler } from 'express';
 import {
+    fetchAllOpenInductions,
     fetchInductionDetails,
     fetchInductions,
     updateInductionDates
@@ -154,9 +155,26 @@ const publishInduction: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const getAllOpenInductions: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthorised');
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
+
+    const result = await fetchAllOpenInductions(page, limit);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, result, 'Open inductions fetched successfully')
+        );
+});
+
 export {
     getInductions,
     getInductionDetails,
     createInduction,
-    publishInduction
+    publishInduction,
+    getAllOpenInductions
 };

@@ -16,6 +16,7 @@ router.use('/user', userRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/clubs', clubRouter);
 router.use('/clubs/:clubId/inductions', inductionRouter);
+router.use('/inductions', inductionRouter);
 router.use('/clubs/:clubId/inductions/:inductionId/stages', stageRouter);
 router.use('/clubs/:clubId/inductions/:inductionId/form', formRouter);
 
