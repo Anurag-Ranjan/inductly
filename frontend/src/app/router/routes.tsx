@@ -17,6 +17,7 @@ import CreateInduction from "../../pages/protectedPages/ClubDashboard/inductions
 import CreateStages from "../../pages/protectedPages/ClubDashboard/inductions/CreateStages";
 import CreateForm from "../../pages/protectedPages/ClubDashboard/inductions/CreateForm/CreateForm";
 import OpenInductions from "../../pages/protectedPages/OpenInductions/OpenInductions";
+import Apply from "../../pages/protectedPages/Apply/Apply";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -45,6 +46,7 @@ export const routes = createRoutesFromElements(
 					</Route>
 				</Route>
 				<Route path="open-inductions" element={<OpenInductions />}></Route>
+				<Route path="apply" element={<Apply />}></Route>
 			</Route>
 		</Route>
 	</>,

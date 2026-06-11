@@ -219,6 +219,10 @@ const fetchAllOpenInductions = async (page: number = 1, limit: number = 6) => {
                         name: true,
                         logo: true
                     }
+                },
+                forms: {
+                    select: { id: true },
+                    take: 1
                 }
             },
             orderBy: { created_at: 'desc' },
@@ -241,7 +245,8 @@ const fetchAllOpenInductions = async (page: number = 1, limit: number = 6) => {
         clubLogo: induction.club.logo,
         inductionDescription: induction.description,
         startDate: induction.opened_on,
-        closeDate: induction.closing_on
+        closeDate: induction.closing_on,
+        formId: induction.forms.length > 0 ? induction.forms[0].id : null
     }));
 
     const totalPages = Math.ceil(total / limit);

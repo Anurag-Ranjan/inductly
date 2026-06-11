@@ -74,6 +74,7 @@ model User {
   memberships        Membership[]
   verificationTokens VerificationToken[]
   stageReviews       ApplicationStageProgress[] @relation("StageReviewer")
+  formResponses      FormResponse[]
 }
 
 // Supports multiple token types per user (email verify + password reset)
@@ -263,18 +264,26 @@ model FormQuestion {
 }
 
 model FormResponse {
-  id             Int      @id @default(autoincrement())
-  form_id        Int
-  application_id Int
-  submitted_at   DateTime @default(now())
+  id Int @id @default(autoincrement())
+
+  form_id Int
+  user_id Int
+
+  // Nullable until the user finally submits
+  application_id Int? @unique
+
+  submitted_at DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   form        Form         @relation(fields: [form_id], references: [id], onDelete: Cascade)
-  application Application  @relation(fields: [application_id], references: [id], onDelete: Cascade)
-  answers     FormAnswer[]
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
-  @@unique([form_id, application_id])
+  answers FormAnswer[]
+
+  @@unique([form_id, user_id])
   @@index([form_id])
-  @@index([application_id])
+  @@index([user_id])
 }
 
 model FormAnswer {
