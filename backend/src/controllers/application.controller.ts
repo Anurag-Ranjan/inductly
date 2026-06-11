@@ -10,8 +10,6 @@ const getMyApplications: RequestHandler = asyncHandler(async (req, res) => {
 
     const applications = await getMyApplicationsService({ userId: user.id });
 
-    console.log(JSON.stringify(applications[0]));
-
     return res
         .status(200)
         .json(
@@ -22,5 +20,13 @@ const getMyApplications: RequestHandler = asyncHandler(async (req, res) => {
             )
         );
 });
+
+const getApplicationDetail: RequestHandler = asyncHandler(
+    async (req, res) => {}
+);
+
+const getApplicationsForAnInduction: RequestHandler = asyncHandler(
+    async (req, res) => {}
+);
 
 export { getMyApplications };

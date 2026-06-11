@@ -42,6 +42,8 @@ const getClubDetails: RequestHandler = asyncHandler(async (req, res) => {
 });
 
 const registerClub: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
     const clubDetails: ClubInput = req.body;
 
     clubSchema.parse(clubDetails);
