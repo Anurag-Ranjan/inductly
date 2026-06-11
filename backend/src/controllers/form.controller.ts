@@ -22,7 +22,7 @@ import {
     deleteQuestionService,
     getFormForApplicantService,
     saveFormDraftService,
-    submitApplicationService,
+    submitApplicationService
 } from '../services/form.service';
 import { UserRole } from '../types/roles.types';
 import { MemberRole } from '@prisma/client';
@@ -294,7 +294,9 @@ const getFormForApplicant: RequestHandler = asyncHandler(async (req, res) => {
         formDescription: form.description,
         questions: form.questions,
         response: form.responses.length === 0 ? null : form.responses[0],
-        hasApplied: form.responses[0]?.application_id !== null
+        hasApplied:
+            form.responses.length !== 0 &&
+            form.responses[0]?.application_id !== null
     };
 
     return res
@@ -408,7 +410,9 @@ const submitApplication: RequestHandler = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, response, 'Application submitted successfully'));
+        .json(
+            new ApiResponse(200, response, 'Application submitted successfully')
+        );
 });
 
 export {

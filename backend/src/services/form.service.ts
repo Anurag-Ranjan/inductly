@@ -221,22 +221,59 @@ const submitApplicationService = async (params: submitApplicationParams) => {
 
     if (!form) throw new ApiError(404, 'Form not found');
 
-    const application = await prisma.application.upsert({
-        where: {
-            user_id_induction_id: { user_id: userId, induction_id: inductionId }
-        },
-        update: {},
-        create: {
-            user_id: userId,
-            induction_id: inductionId
-        }
-    });
-
     const existingResponse = await prisma.formResponse.findUnique({
         where: {
             form_id_user_id: { form_id: formId, user_id: userId }
         },
         include: { answers: true }
+    });
+
+    if (
+        existingResponse !== null &&
+        existingResponse?.application_id !== null
+    ) {
+        throw new ApiError(409, 'Application has already been submitted');
+    }
+
+    const induction = await prisma.induction.findUnique({
+        where: {
+            id: inductionId,
+            NOT: {
+                opened_on: null,
+                closing_on: null
+            }
+        },
+        select: {
+            stages: {
+                orderBy: {
+                    order_index: 'asc'
+                },
+                select: {
+                    id: true
+                }
+            }
+        }
+    });
+
+    if (!induction)
+        throw new ApiError(404, 'Induction not found or not published');
+
+    const firstStage = induction.stages[0];
+    if (!firstStage) throw new ApiError(400, 'No stages added');
+
+    const application = await prisma.application.upsert({
+        where: {
+            user_id_induction_id: {
+                user_id: userId,
+                induction_id: inductionId
+            }
+        },
+        update: {},
+        create: {
+            user_id: userId,
+            induction_id: inductionId,
+            current_stage_id: firstStage.id
+        }
     });
 
     if (existingResponse) {

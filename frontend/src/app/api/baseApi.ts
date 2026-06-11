@@ -15,6 +15,7 @@ export const baseApi = createApi({
 		"Stages",
 		"Form",
 		"OpenInductions",
+		"MyApplications",
 	],
 
 	endpoints: () => ({}),

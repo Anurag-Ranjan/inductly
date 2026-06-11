@@ -7,7 +7,7 @@ export default function ApplicationSubmitted() {
 
 	useEffect(() => {
 		createConfetti();
-		const icon = iconRef.current;
+		const icon: any = iconRef.current;
 		if (icon) icon.addEventListener("click", createConfetti);
 		return () => {
 			if (icon) icon.removeEventListener("click", createConfetti);
@@ -98,7 +98,7 @@ export default function ApplicationSubmitted() {
 						<p className="text-[14px] leading-[20px] text-[#464555] pt-1">
 							Want to join more?{" "}
 							<Link
-								to="open-inductions"
+								to="/open-inductions"
 								className="text-[#3525cd] hover:underline font-medium transition-all"
 							>
 								Apply to other clubs.
@@ -110,7 +110,7 @@ export default function ApplicationSubmitted() {
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-6">
 						{/* Primary CTA */}
 						<button
-							onClick={() => navigate("dashboard")}
+							onClick={() => navigate("/dashboard")}
 							className="group relative w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#3525cd] to-[#712ae2] text-white text-[14px] leading-[20px] font-medium rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 overflow-hidden"
 						>
 							<div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />

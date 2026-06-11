@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 	{ icon: "dashboard", label: "Dashboard", path: "/dashboard" },
 	{ icon: "groups", label: "My Clubs", path: "/my-clubs" },
 	{ icon: "campaign", label: "Open Inductions", path: "/open-inductions" },
-	{ icon: "description", label: "Applications", path: "/applications" },
+	{ icon: "description", label: "Applications", path: "/my-applications" },
 	{ icon: "person", label: "Profile", path: "/profile" },
 	{ icon: "settings", label: "Settings", path: "/settings" },
 ];
