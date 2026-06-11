@@ -1,19 +1,27 @@
-import { Navigate, useParams } from "react-router";
+import { Navigate, useParams, useNavigate } from "react-router";
 import {
 	useGetFormForApplicantQuery,
 	useUploadFileMutation,
+	useSaveFormDraftMutation,
+	useSubmitApplicationMutation,
 } from "../../../features/response/responseApi";
 import Loader from "../../../components/loaders/Loader";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { toast } from "react-toastify";
 import FormHeader from "../../../features/response/components/FormHeader";
 import FormQuestionCards from "../../../features/response/components/FormQuestionCards";
+import ApplicationSubmitted from "../../../features/response/components/ApplicationSubmitted";
 
 export default function Apply() {
 	const { formId, clubId, inductionId } = useParams();
+	const navigate = useNavigate();
 
 	const [answers, setAnswers] = useState<
 		{ question_id: number; answer: string }[]
 	>([]);
+	const [isSaving, setIsSaving] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isSubmitted, setIsSubmitted] = useState(false);
 
 	const {
 		data: result,
@@ -27,6 +35,61 @@ export default function Apply() {
 
 	const formData = result?.data;
 	const [uploadFile] = useUploadFileMutation();
+	const [saveFormDraft] = useSaveFormDraftMutation();
+	const [submitApplication] = useSubmitApplicationMutation();
+
+	useEffect(() => {
+		if (!formData) return;
+		if (formData.hasApplied) {
+			setIsSubmitted(true);
+			return;
+		}
+		if (formData.response?.answers) {
+			setAnswers(
+				formData.response.answers.map(
+					(a: { question_id: number; answer: string }) => ({
+						question_id: a.question_id,
+						answer: a.answer,
+					}),
+				),
+			);
+		}
+	}, [formData]);
+
+	const handleSaveDraft = async () => {
+		setIsSaving(true);
+		try {
+			await saveFormDraft({
+				clubId: Number(clubId),
+				inductionId: Number(inductionId),
+				formId: Number(formId),
+				formAnswers: answers,
+			}).unwrap();
+			toast.success("Draft saved successfully");
+			navigate("/open-inductions");
+		} catch {
+			toast.error("Failed to save draft. Please try again.");
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
+	const handleSubmitApplication = async () => {
+		setIsSubmitting(true);
+		try {
+			await submitApplication({
+				clubId: Number(clubId),
+				inductionId: Number(inductionId),
+				formId: Number(formId),
+				formAnswers: answers,
+			}).unwrap();
+			setIsSubmitted(true);
+		} catch {
+			toast.error("Failed to submit application. Please try again.");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	const handleFileUpload = useCallback(
 		async (
@@ -55,6 +118,8 @@ export default function Apply() {
 		},
 		[clubId, inductionId, formId, uploadFile],
 	);
+
+	if (isSubmitted) return <ApplicationSubmitted />;
 
 	if (isLoading) return <Loader />;
 	if (error) return <Navigate to="/open-inductions" replace />;
@@ -124,13 +189,68 @@ export default function Apply() {
 
 					<div className="flex items-center w-full md:w-auto order-1 md:order-2 gap-4">
 						<button
-							onClick={() => console.log(answers)}
-							className="flex-1 md:flex-none px-6 py-3 rounded-lg border border-[#777587] text-[#1b1b24] font-semibold text-base hover:bg-[#f5f2ff] active:scale-[0.98] transition-all"
+							onClick={handleSaveDraft}
+							disabled={isSaving}
+							className="flex-1 md:flex-none px-6 py-3 rounded-lg border border-[#777587] text-[#1b1b24] font-semibold text-base hover:bg-[#f5f2ff] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 						>
-							Save as Draft
+							{isSaving ? (
+								<>
+									<svg
+										className="animate-spin h-5 w-5"
+										viewBox="0 0 24 24"
+										fill="none"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+										/>
+									</svg>
+									Saving...
+								</>
+							) : (
+								"Save as Draft"
+							)}
 						</button>
-						<button className="flex-1 md:flex-none px-6 py-3 rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#712ae2] text-white font-semibold text-base shadow-lg shadow-[#3525cd]/20 hover:shadow-[#3525cd]/30 active:scale-[0.98] transition-all">
-							Submit Application
+						<button
+							onClick={handleSubmitApplication}
+							disabled={isSubmitting}
+							className="flex-1 md:flex-none px-6 py-3 rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#712ae2] text-white font-semibold text-base shadow-lg shadow-[#3525cd]/20 hover:shadow-[#3525cd]/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+						>
+							{isSubmitting ? (
+								<>
+									<svg
+										className="animate-spin h-5 w-5"
+										viewBox="0 0 24 24"
+										fill="none"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+										/>
+									</svg>
+									Submitting...
+								</>
+							) : (
+								"Submit Application"
+							)}
 						</button>
 					</div>
 				</div>

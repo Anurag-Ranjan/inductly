@@ -20,7 +20,9 @@ import {
     updateFormService,
     updateQuestionService,
     deleteQuestionService,
-    getFormForApplicantService
+    getFormForApplicantService,
+    saveFormDraftService,
+    submitApplicationService,
 } from '../services/form.service';
 import { UserRole } from '../types/roles.types';
 import { MemberRole } from '@prisma/client';
@@ -292,7 +294,7 @@ const getFormForApplicant: RequestHandler = asyncHandler(async (req, res) => {
         formDescription: form.description,
         questions: form.questions,
         response: form.responses.length === 0 ? null : form.responses[0],
-        hasApplied: form.responses.length !== 0
+        hasApplied: form.responses[0]?.application_id !== null
     };
 
     return res
@@ -336,7 +338,12 @@ const uploadFile: RequestHandler = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Allowed types must be provided');
     }
 
-    const result = await uploadFormFile(req.file, req.file.path, allowedTypes, maxSizeMB);
+    const result = await uploadFormFile(
+        req.file,
+        req.file.path,
+        allowedTypes,
+        maxSizeMB
+    );
 
     await deleteFile(req.file.path);
 
@@ -351,6 +358,59 @@ const uploadFile: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const saveFormDraft: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const { formAnswers } = req.body;
+
+    if (!Array.isArray(formAnswers)) {
+        throw new ApiError(400, 'formAnswers must be an array');
+    }
+
+    const response = await saveFormDraftService({
+        userId: user.id,
+        formId,
+        answers: formAnswers
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, response, 'Draft saved successfully'));
+});
+
+const submitApplication: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const inductionId = Number(req.params.inductionId);
+    if (!inductionId || isNaN(inductionId))
+        throw new ApiError(400, 'Invalid induction id');
+
+    const { formAnswers } = req.body;
+
+    if (!Array.isArray(formAnswers)) {
+        throw new ApiError(400, 'formAnswers must be an array');
+    }
+
+    const response = await submitApplicationService({
+        userId: user.id,
+        formId,
+        inductionId,
+        answers: formAnswers
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, response, 'Application submitted successfully'));
+});
+
 export {
     createForm,
     createQuestion,
@@ -363,5 +423,7 @@ export {
     deleteQuestion,
     getFormResponse,
     getFormForApplicant,
-    uploadFile
+    uploadFile,
+    saveFormDraft,
+    submitApplication
 };

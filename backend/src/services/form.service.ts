@@ -26,6 +26,19 @@ type answerParams = {
     answers: Array<{ question_id: number; answer: string }>;
 };
 
+type saveDraftParams = {
+    userId: number;
+    formId: number;
+    answers: Array<{ question_id: number; answer: any }>;
+};
+
+type submitApplicationParams = {
+    userId: number;
+    formId: number;
+    inductionId: number;
+    answers: Array<{ question_id: number; answer: any }>;
+};
+
 type updateFormParams = {
     formId: number;
     clubId: number;
@@ -149,6 +162,125 @@ const submitFormService = async (params: answerParams) => {
     }
 
     return response;
+};
+
+const saveFormDraftService = async (params: saveDraftParams) => {
+    const { answers, formId, userId } = params;
+    const form = await prisma.form.findUnique({ where: { id: formId } });
+
+    if (!form) throw new ApiError(404, 'Form not found');
+
+    const existingResponse = await prisma.formResponse.findUnique({
+        where: {
+            form_id_user_id: { form_id: formId, user_id: userId }
+        },
+        include: { answers: true }
+    });
+
+    if (existingResponse) {
+        await prisma.formAnswer.deleteMany({
+            where: { response_id: existingResponse.id }
+        });
+
+        const updatedResponse = await prisma.formResponse.update({
+            where: { id: existingResponse.id },
+            data: {
+                answers: {
+                    create: answers.map((a) => ({
+                        question_id: a.question_id,
+                        answer: a.answer
+                    }))
+                }
+            },
+            include: { answers: true }
+        });
+
+        return updatedResponse;
+    }
+
+    const newResponse = await prisma.formResponse.create({
+        data: {
+            form_id: formId,
+            user_id: userId,
+            answers: {
+                create: answers.map((a) => ({
+                    question_id: a.question_id,
+                    answer: a.answer
+                }))
+            }
+        },
+        include: { answers: true }
+    });
+
+    return newResponse;
+};
+
+const submitApplicationService = async (params: submitApplicationParams) => {
+    const { answers, formId, userId, inductionId } = params;
+    const form = await prisma.form.findUnique({ where: { id: formId } });
+
+    if (!form) throw new ApiError(404, 'Form not found');
+
+    const application = await prisma.application.upsert({
+        where: {
+            user_id_induction_id: { user_id: userId, induction_id: inductionId }
+        },
+        update: {},
+        create: {
+            user_id: userId,
+            induction_id: inductionId
+        }
+    });
+
+    const existingResponse = await prisma.formResponse.findUnique({
+        where: {
+            form_id_user_id: { form_id: formId, user_id: userId }
+        },
+        include: { answers: true }
+    });
+
+    if (existingResponse) {
+        if (existingResponse.application_id !== null) {
+            throw new ApiError(409, 'Application has already been submitted');
+        }
+
+        await prisma.formAnswer.deleteMany({
+            where: { response_id: existingResponse.id }
+        });
+
+        const updatedResponse = await prisma.formResponse.update({
+            where: { id: existingResponse.id },
+            data: {
+                application_id: application.id,
+                answers: {
+                    create: answers.map((a) => ({
+                        question_id: a.question_id,
+                        answer: a.answer
+                    }))
+                }
+            },
+            include: { answers: true }
+        });
+
+        return updatedResponse;
+    }
+
+    const newResponse = await prisma.formResponse.create({
+        data: {
+            form_id: formId,
+            user_id: userId,
+            application_id: application.id,
+            answers: {
+                create: answers.map((a) => ({
+                    question_id: a.question_id,
+                    answer: a.answer
+                }))
+            }
+        },
+        include: { answers: true }
+    });
+
+    return newResponse;
 };
 
 const publishFormService = async (formId: number, clubId: number) => {
@@ -340,6 +472,8 @@ export {
     createQuestionService,
     createQuestionsService,
     submitFormService,
+    saveFormDraftService,
+    submitApplicationService,
     publishFormService,
     getFormInformationService,
     getFormByInductionService,

@@ -10,7 +10,9 @@ import {
     updateQuestion,
     deleteQuestion,
     getFormForApplicant,
-    uploadFile
+    uploadFile,
+    saveFormDraft,
+    submitApplication
 } from '../controllers/form.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
@@ -42,15 +44,19 @@ formRouter
     .post(authMiddleware, authorizeClubRole, publishForm);
 
 formRouter
-    .route('/:formId/applications/:applicationId')
-    .post(authMiddleware, authorizeClubRole, submitForm);
-
-formRouter
     .route('/:formId/respond')
     .get(authMiddleware, authorizeClubRole, getFormForApplicant);
 
 formRouter
     .route('/:formId/upload')
     .post(authMiddleware, upload.single('file'), uploadFile);
+
+formRouter
+    .route('/:formId/save-draft')
+    .post(authMiddleware, authorizeClubRole, saveFormDraft);
+
+formRouter
+    .route('/:formId/submit')
+    .post(authMiddleware, authorizeClubRole, submitApplication);
 
 export { formRouter };

@@ -33,7 +33,47 @@ export const responseApi = baseApi.injectEndpoints({
 				data: formData,
 			}),
 		}),
+
+		saveFormDraft: builder.mutation({
+			query: ({
+				clubId,
+				inductionId,
+				formId,
+				formAnswers,
+			}: {
+				clubId: number;
+				inductionId: number;
+				formId: number;
+				formAnswers: { question_id: number; answer: string }[];
+			}) => ({
+				url: `/clubs/${clubId}/inductions/${inductionId}/form/${formId}/save-draft`,
+				method: "POST",
+				data: { formAnswers },
+			}),
+		}),
+		submitApplication: builder.mutation({
+			query: ({
+				clubId,
+				inductionId,
+				formId,
+				formAnswers,
+			}: {
+				clubId: number;
+				inductionId: number;
+				formId: number;
+				formAnswers: { question_id: number; answer: string }[];
+			}) => ({
+				url: `/clubs/${clubId}/inductions/${inductionId}/form/${formId}/submit`,
+				method: "POST",
+				data: { formAnswers },
+			}),
+		}),
 	}),
 });
 
-export const { useGetFormForApplicantQuery, useUploadFileMutation } = responseApi;
+export const {
+	useGetFormForApplicantQuery,
+	useUploadFileMutation,
+	useSaveFormDraftMutation,
+	useSubmitApplicationMutation,
+} = responseApi;
