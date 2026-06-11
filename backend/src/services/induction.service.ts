@@ -237,17 +237,20 @@ const fetchAllOpenInductions = async (page: number = 1, limit: number = 6) => {
         })
     ]);
 
-    const data = inductions.map((induction) => ({
-        inductionId: induction.id,
-        clubId: induction.club_id,
-        clubName: induction.club.name,
-        inductionTitle: induction.title,
-        clubLogo: induction.club.logo,
-        inductionDescription: induction.description,
-        startDate: induction.opened_on,
-        closeDate: induction.closing_on,
-        formId: induction.forms.length > 0 ? induction.forms[0].id : null
-    }));
+    const data = inductions.map((induction) => {
+        const publishedForm = induction.forms?.[0] ?? null;
+        return {
+            inductionId: induction.id,
+            clubId: induction.club_id,
+            clubName: induction.club.name,
+            inductionTitle: induction.title,
+            clubLogo: induction.club.logo,
+            inductionDescription: induction.description,
+            startDate: induction.opened_on,
+            closeDate: induction.closing_on,
+            formId: publishedForm?.id ?? null
+        };
+    });
 
     const totalPages = Math.ceil(total / limit);
 

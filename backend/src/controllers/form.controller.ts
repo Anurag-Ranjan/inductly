@@ -19,9 +19,12 @@ import {
     submitFormService,
     updateFormService,
     updateQuestionService,
-    deleteQuestionService
+    deleteQuestionService,
+    getFormForApplicantService
 } from '../services/form.service';
 import { UserRole } from '../types/roles.types';
+import { MemberRole } from '@prisma/client';
+import { prisma } from '../utils/prisma';
 
 const createForm: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -58,7 +61,10 @@ const createQuestion: RequestHandler = asyncHandler(async (req, res) => {
     if (Array.isArray(req.body)) {
         const questionsData = createQuestionsSchema.parse(req.body);
 
-        const createdQuestions = await createQuestionsService(formId, questionsData);
+        const createdQuestions = await createQuestionsService(
+            formId,
+            questionsData
+        );
 
         return res
             .status(200)
@@ -193,7 +199,8 @@ const updateQuestion: RequestHandler = asyncHandler(async (req, res) => {
     if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
 
     const questionId = Number(req.params.questionId);
-    if (!questionId || isNaN(questionId)) throw new ApiError(400, 'Invalid question id');
+    if (!questionId || isNaN(questionId))
+        throw new ApiError(400, 'Invalid question id');
 
     const data = updateQuestionSchema.parse(req.body);
 
@@ -208,7 +215,11 @@ const updateQuestion: RequestHandler = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, updatedQuestion, 'Question updated successfully')
+            new ApiResponse(
+                200,
+                updatedQuestion,
+                'Question updated successfully'
+            )
         );
 });
 
@@ -222,7 +233,8 @@ const deleteQuestion: RequestHandler = asyncHandler(async (req, res) => {
     if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
 
     const questionId = Number(req.params.questionId);
-    if (!questionId || isNaN(questionId)) throw new ApiError(400, 'Invalid question id');
+    if (!questionId || isNaN(questionId))
+        throw new ApiError(400, 'Invalid question id');
 
     const deletedQuestion = await deleteQuestionService(questionId, formId);
 
@@ -231,7 +243,11 @@ const deleteQuestion: RequestHandler = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, deletedQuestion, 'Question deleted successfully')
+            new ApiResponse(
+                200,
+                deletedQuestion,
+                'Question deleted successfully'
+            )
         );
 });
 
@@ -242,6 +258,43 @@ const getFormResponse: RequestHandler = asyncHandler(async (req, res) => {
     if (!role) throw new ApiError(403, 'Unauthorised');
 
     // const response = await getFormResponseService();
+});
+
+const getFormForApplicant: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    if (role == UserRole.ADMIN || role == UserRole.MEMBER)
+        throw new ApiError(400, 'Members cannot fill form');
+
+    const formId = Number(req.params.formId);
+    if (!formId || isNaN(formId)) throw new ApiError(400, 'Invalid form id');
+
+    const form = await getFormForApplicantService(formId, user.id);
+    if (!form) throw new ApiError(404, 'Form not found');
+
+    if (!form.isPublished) throw new ApiError(403, 'Form is not yet published');
+
+    const data = {
+        clubId: form.induction.club.id,
+        clubName: form.induction.club.name,
+        clubLogo: form.induction.club.logo,
+        inductionId: form.induction.id,
+        inductionTitle: form.induction.title,
+        formId: form.id,
+        formTitle: form.title,
+        formDescription: form.description,
+        questions: form.questions,
+        response: form.responses.length === 0 ? null : form.responses[0],
+        hasApplied: form.responses.length !== 0
+    };
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, data, 'Form fetched successfully'));
 });
 
 const getFormByInduction: RequestHandler = asyncHandler(async (req, res) => {
@@ -257,7 +310,9 @@ const getFormByInduction: RequestHandler = asyncHandler(async (req, res) => {
     if (!form) {
         return res
             .status(200)
-            .json(new ApiResponse(200, null, 'No form found for this induction'));
+            .json(
+                new ApiResponse(200, null, 'No form found for this induction')
+            );
     }
 
     return res
@@ -275,5 +330,6 @@ export {
     updateForm,
     updateQuestion,
     deleteQuestion,
-    getFormResponse
+    getFormResponse,
+    getFormForApplicant
 };

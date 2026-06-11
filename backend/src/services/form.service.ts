@@ -89,7 +89,10 @@ const createQuestionService = async (params: questionParams) => {
     return createdQuestion;
 };
 
-const createQuestionsService = async (formId: number, questions: Omit<questionParams, 'formId'>[]) => {
+const createQuestionsService = async (
+    formId: number,
+    questions: Omit<questionParams, 'formId'>[]
+) => {
     const form = await prisma.form.findUnique({
         where: { id: formId }
     });
@@ -130,6 +133,7 @@ const submitFormService = async (params: answerParams) => {
         response = await prisma.formResponse.create({
             data: {
                 form_id: form.id,
+                user_id: application.user_id,
                 application_id: application.id,
                 answers: {
                     create: answers
@@ -216,7 +220,8 @@ const updateFormService = async (params: updateFormParams) => {
     });
 
     if (!form) throw new ApiError(404, 'Form not found');
-    if (form.induction.club_id !== clubId) throw new ApiError(403, 'Unauthorised');
+    if (form.induction.club_id !== clubId)
+        throw new ApiError(403, 'Unauthorised');
 
     const updateData: Record<string, any> = {};
     if (title !== undefined) updateData.title = title;
@@ -240,10 +245,14 @@ const updateQuestionService = async (params: updateQuestionParams) => {
     if (!question) throw new ApiError(404, 'Question not found');
 
     const updateData: Record<string, any> = {};
-    if (data.question_text !== undefined) updateData.question_text = data.question_text;
-    if (data.question_type !== undefined) updateData.question_type = data.question_type;
-    if (data.order_index !== undefined) updateData.order_index = data.order_index;
-    if (data.is_required !== undefined) updateData.is_required = data.is_required;
+    if (data.question_text !== undefined)
+        updateData.question_text = data.question_text;
+    if (data.question_type !== undefined)
+        updateData.question_type = data.question_type;
+    if (data.order_index !== undefined)
+        updateData.order_index = data.order_index;
+    if (data.is_required !== undefined)
+        updateData.is_required = data.is_required;
     if (data.metadata !== undefined) updateData.metadata = data.metadata;
 
     const updatedQuestion = await prisma.formQuestion.update({
@@ -285,6 +294,50 @@ const getFormByInductionService = async (inductionId: number) => {
     return form;
 };
 
+const getFormForApplicantService = async (formId: number, userId: number) => {
+    const form = await prisma.form.findUnique({
+        where: { id: formId },
+        include: {
+            responses: {
+                where: {
+                    user_id: userId
+                },
+                select: {
+                    answers: true,
+                    application_id: true
+                }
+            },
+            questions: {
+                orderBy: { order_index: 'asc' },
+                select: {
+                    id: true,
+                    question_text: true,
+                    question_type: true,
+                    is_required: true,
+                    order_index: true,
+                    metadata: true
+                }
+            },
+            induction: {
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    club: {
+                        select: {
+                            id: true,
+                            name: true,
+                            logo: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return form;
+};
+
 export {
     createFormService,
     createQuestionService,
@@ -295,5 +348,6 @@ export {
     getFormByInductionService,
     updateFormService,
     updateQuestionService,
-    deleteQuestionService
+    deleteQuestionService,
+    getFormForApplicantService
 };

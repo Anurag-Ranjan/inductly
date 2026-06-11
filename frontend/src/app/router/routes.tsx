@@ -46,7 +46,10 @@ export const routes = createRoutesFromElements(
 					</Route>
 				</Route>
 				<Route path="open-inductions" element={<OpenInductions />}></Route>
-				<Route path="apply" element={<Apply />}></Route>
+				<Route
+					path=":clubId/:inductionId/:formId/apply"
+					element={<Apply />}
+				></Route>
 			</Route>
 		</Route>
 	</>,

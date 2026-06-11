@@ -8,7 +8,8 @@ import {
     getFormByInduction,
     updateForm,
     updateQuestion,
-    deleteQuestion
+    deleteQuestion,
+    getFormForApplicant
 } from '../controllers/form.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
@@ -41,5 +42,7 @@ formRouter
 formRouter
     .route('/:formId/applications/:applicationId')
     .post(authMiddleware, authorizeClubRole, submitForm);
+
+formRouter.route('/:formId/respond').get(authMiddleware, getFormForApplicant);
 
 export { formRouter };

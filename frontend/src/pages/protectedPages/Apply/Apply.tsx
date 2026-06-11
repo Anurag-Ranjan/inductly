@@ -1,6 +1,22 @@
-import React from "react";
+import { Navigate, useParams } from "react-router";
+import { useGetFormForApplicantQuery } from "../../../features/response/responseApi";
+import Loader from "../../../components/loaders/Loader";
 
 export default function Apply() {
+	const { formId, clubId, inductionId } = useParams();
+
+	if (!formId || !clubId || !inductionId || formId === "null") {
+		return <Navigate to="/open-inductions" replace />;
+	}
+
+	const { data: formData, isLoading } = useGetFormForApplicantQuery({
+		clubId: Number(clubId),
+		formId: Number(formId),
+		inductionId: Number(inductionId),
+	});
+
+	if (isLoading) return <Loader />;
+
 	return (
 		<div className="bg-[#fcf8ff] text-[#1b1b24] antialiased min-h-screen pb-32 font-['Inter',sans-serif] relative z-0">
 			{/* NOTE: Ensure these links are in your public/index.html <head> for the fonts and icons to work:

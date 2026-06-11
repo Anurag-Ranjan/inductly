@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGetOpenInductionsQuery } from "../../../features/induction/inductionApi";
+import { useNavigate } from "react-router";
 
 function Icon({ name, className = "" }) {
 	return (
@@ -27,13 +28,14 @@ function formatDate(dateStr: string | null) {
 export default function OpenInductions() {
 	const [page, setPage] = useState(1);
 	const [searchTerm, setSearchTerm] = useState("");
+	const navigate = useNavigate();
 
 	const { data, isLoading } = useGetOpenInductionsQuery(page);
 
 	const responseData = data?.data;
 	const rawInductions = responseData?.inductions || [];
 
-	const filteredInductions = rawInductions.filter((item) => {
+	const filteredInductions = rawInductions.filter((item: any) => {
 		const term = searchTerm.toLowerCase();
 		return (
 			item.clubName.toLowerCase().includes(term) ||
@@ -93,12 +95,15 @@ export default function OpenInductions() {
 			<main className="max-w-[1280px] mx-auto px-6 pb-16">
 				{isLoading ? (
 					<div className="flex justify-center py-16">
-						<Icon name="sync" className="text-4xl text-[#712ae2] animate-spin" />
+						<Icon
+							name="sync"
+							className="text-4xl text-[#712ae2] animate-spin"
+						/>
 					</div>
 				) : filteredInductions.length > 0 ? (
 					<>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-							{filteredInductions.map((induction) => (
+							{filteredInductions.map((induction: any) => (
 								<article
 									key={induction.inductionId}
 									className="bg-white border border-[#c7c4d8] rounded-xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg relative group"
@@ -146,7 +151,14 @@ export default function OpenInductions() {
 											<span>Closes: {formatDate(induction.closeDate)}</span>
 										</div>
 									</div>
-									<button className="w-full py-4 rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#712ae2] hover:-translate-y-[1px] hover:shadow-[0_10px_15px_-3px_rgba(79,70,229,0.3)] active:scale-[0.98] transition-all duration-200 text-[#ffffff] text-sm font-medium">
+									<button
+										onClick={() => {
+											navigate(
+												`/${induction.clubId}/${induction.inductionId}/${induction.formId}/apply`,
+											);
+										}}
+										className="w-full py-4 rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#712ae2] hover:-translate-y-[1px] hover:shadow-[0_10px_15px_-3px_rgba(79,70,229,0.3)] active:scale-[0.98] transition-all duration-200 text-[#ffffff] text-sm font-medium"
+									>
 										Apply Now
 									</button>
 								</article>
@@ -158,8 +170,9 @@ export default function OpenInductions() {
 							<div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-10">
 								<p className="text-sm text-[#464555] whitespace-nowrap">
 									Showing {(responseData.page - 1) * responseData.limit + 1} to{" "}
-									{(responseData.page - 1) * responseData.limit + rawInductions.length} of{" "}
-									{responseData.total} inductions
+									{(responseData.page - 1) * responseData.limit +
+										rawInductions.length}{" "}
+									of {responseData.total} inductions
 								</p>
 								<div className="flex items-center gap-2">
 									<button
