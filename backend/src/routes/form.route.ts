@@ -9,10 +9,12 @@ import {
     updateForm,
     updateQuestion,
     deleteQuestion,
-    getFormForApplicant
+    getFormForApplicant,
+    uploadFile
 } from '../controllers/form.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { authorizeClubRole } from '../middlewares/role.middleware';
+import { upload } from '../middlewares/multer.middleware';
 
 const formRouter = Router({ mergeParams: true });
 
@@ -43,6 +45,12 @@ formRouter
     .route('/:formId/applications/:applicationId')
     .post(authMiddleware, authorizeClubRole, submitForm);
 
-formRouter.route('/:formId/respond').get(authMiddleware, getFormForApplicant);
+formRouter
+    .route('/:formId/respond')
+    .get(authMiddleware, authorizeClubRole, getFormForApplicant);
+
+formRouter
+    .route('/:formId/upload')
+    .post(authMiddleware, upload.single('file'), uploadFile);
 
 export { formRouter };

@@ -20,6 +20,7 @@ type questionParams = {
 };
 
 type answerParams = {
+    userId: number;
     formId: number;
     applicationId: number;
     answers: Array<{ question_id: number; answer: string }>;
@@ -119,13 +120,9 @@ const createQuestionsService = async (
 
 const submitFormService = async (params: answerParams) => {
     const { answers, formId, applicationId } = params;
-    const [form, application] = await Promise.all([
-        prisma.form.findUnique({ where: { id: formId } }),
-        prisma.application.findUnique({ where: { id: applicationId } })
-    ]);
+    const form = await prisma.form.findUnique({ where: { id: formId } });
 
-    if (!form || !application)
-        throw new ApiError(404, 'Form or application not found');
+    if (!form) throw new ApiError(404, 'Form not found');
 
     let response: FormResponse;
 
@@ -133,8 +130,8 @@ const submitFormService = async (params: answerParams) => {
         response = await prisma.formResponse.create({
             data: {
                 form_id: form.id,
-                user_id: application.user_id,
-                application_id: application.id,
+                user_id: params.userId,
+
                 answers: {
                     create: answers
                 }

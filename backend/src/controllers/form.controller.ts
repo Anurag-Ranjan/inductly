@@ -25,6 +25,8 @@ import {
 import { UserRole } from '../types/roles.types';
 import { MemberRole } from '@prisma/client';
 import { prisma } from '../utils/prisma';
+import { uploadFormFile } from '../utils/cloudinary';
+import { deleteFile } from '../utils/deleteFile';
 
 const createForm: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -113,6 +115,7 @@ const submitForm: RequestHandler = asyncHandler(async (req, res) => {
     const { formAnswers } = req.body; //[{question_id, answer}];
 
     const submittedForm = await submitFormService({
+        userId: user.id,
         formId,
         applicationId,
         answers: formAnswers
@@ -265,7 +268,7 @@ const getFormForApplicant: RequestHandler = asyncHandler(async (req, res) => {
     if (!user) throw new ApiError(401, 'Unauthenticated');
 
     const role = req.role;
-    if (!role) throw new ApiError(403, 'Unauthorised');
+    if (!role) throw new ApiError(403, 'Unauthorised, no role');
 
     if (role == UserRole.ADMIN || role == UserRole.MEMBER)
         throw new ApiError(400, 'Members cannot fill form');
@@ -320,6 +323,34 @@ const getFormByInduction: RequestHandler = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, form, 'Form fetched successfully'));
 });
 
+const uploadFile: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    if (!req.file) throw new ApiError(400, 'No file uploaded');
+
+    const allowedTypes: string[] = JSON.parse(req.body.allowedTypes || '[]');
+    const maxSizeMB: number = parseFloat(req.body.maxSizeMB || '5');
+
+    if (!Array.isArray(allowedTypes) || allowedTypes.length === 0) {
+        throw new ApiError(400, 'Allowed types must be provided');
+    }
+
+    const result = await uploadFormFile(req.file, req.file.path, allowedTypes, maxSizeMB);
+
+    await deleteFile(req.file.path);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { secure_url: result.secure_url, public_id: result.public_id },
+                'File uploaded successfully'
+            )
+        );
+});
+
 export {
     createForm,
     createQuestion,
@@ -331,5 +362,6 @@ export {
     updateQuestion,
     deleteQuestion,
     getFormResponse,
-    getFormForApplicant
+    getFormForApplicant,
+    uploadFile
 };
