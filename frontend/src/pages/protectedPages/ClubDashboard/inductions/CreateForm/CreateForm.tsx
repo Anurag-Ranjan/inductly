@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
+import { toast } from "react-toastify";
 import { QUESTION_TYPES } from "./constants";
 import {
 	useCreateFormMutation,
@@ -9,6 +10,7 @@ import {
 	useUpdateFormMutation,
 	useUpdateQuestionMutation,
 } from "../../../../../features/form/formApi";
+import { useGetIsInductionPublishedQuery } from "../../../../../features/induction/inductionApi";
 import type { Question } from "../../../../../features/forms/types/forms.types";
 import Loader from "../../../../../components/loaders/Loader";
 import { createEmptyQuestion } from "../../../../../features/forms/services/createQuestions";
@@ -27,6 +29,18 @@ export default function CreateForm() {
 		clubId: Number(clubId),
 		inductionId: Number(inductionId),
 	});
+	const { data: publishedData, isLoading: isCheckingPublished } =
+		useGetIsInductionPublishedQuery({
+			clubId: Number(clubId),
+			inductionId: Number(inductionId),
+		});
+
+	useEffect(() => {
+		if (!isCheckingPublished && publishedData?.data?.isPublished) {
+			toast.warning("Induction is already live");
+			navigate(`/my-clubs/${clubId}`, { replace: true });
+		}
+	}, [isCheckingPublished, publishedData, clubId, navigate]);
 
 	const [formId, setFormId] = useState<number | null>(null);
 	const [progress, setProgress] = useState(0);
@@ -75,7 +89,6 @@ export default function CreateForm() {
 					})),
 				);
 			}
-
 		} else {
 			createForm({
 				clubId: Number(clubId),
@@ -129,7 +142,12 @@ export default function CreateForm() {
 		);
 	};
 
-	const handleSave = (publish = false) => {};
+	const handleSave = (publish = false) => {
+		console.log("Form data:", { formTitle, formDescription, questions });
+		if (publish) {
+			navigate(`/my-clubs/${clubId}/${inductionId}/schedule-induction`);
+		}
+	};
 
 	async function syncForm() {
 		if (syncingRef.current || !formId) {
@@ -203,10 +221,7 @@ export default function CreateForm() {
 				setQuestions((prev) =>
 					prev.map((q) => {
 						const syncedVersion = updateVersions.get(q.clientId);
-						if (
-							syncedVersion !== undefined &&
-							q.version === syncedVersion
-						) {
+						if (syncedVersion !== undefined && q.version === syncedVersion) {
 							return { ...q, syncStatus: "synced" };
 						}
 						return q;
@@ -256,7 +271,7 @@ export default function CreateForm() {
 		}
 	}
 
-	if (isFetchingForm || isCreatingForm) return <Loader />;
+	if (isFetchingForm || isCreatingForm || isCheckingPublished) return <Loader />;
 
 	return (
 		<div className="min-h-screen flex flex-col items-center py-12 px-4 md:px-6 bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">

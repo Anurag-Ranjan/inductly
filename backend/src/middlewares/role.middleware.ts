@@ -60,3 +60,13 @@ export const authorizeClubRole: RequestHandler = asyncHandler(
         next();
     }
 );
+
+export const isAdmin: RequestHandler = asyncHandler(async (req, res, next) => {
+    const role = req.role;
+
+    if (!role || role != UserRole.ADMIN)
+        throw new ApiError(403, 'Unauthorised. Not an Admin');
+
+    req.isAdmin = true;
+    next();
+});

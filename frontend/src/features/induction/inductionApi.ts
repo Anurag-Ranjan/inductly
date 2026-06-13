@@ -63,6 +63,47 @@ const inductionsApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["Stages"],
 		}),
+		getInductionDetails: builder.query({
+			query: (params: {
+				clubId: number | string;
+				inductionId: number | string;
+			}) => ({
+				url: `clubs/${params.clubId}/inductions/${params.inductionId}`,
+				method: "GET",
+			}),
+		}),
+		updateInductionDetails: builder.mutation({
+			query: (params: {
+				clubId: number | string;
+				inductionId: number | string;
+				body: { title: string; description: string };
+			}) => ({
+				url: `clubs/${params.clubId}/inductions/${params.inductionId}/update`,
+				method: "PATCH",
+				data: params.body,
+			}),
+		}),
+		getIsInductionPublished: builder.query({
+			query: (params: {
+				clubId: number | string;
+				inductionId: number | string;
+			}) => ({
+				url: `clubs/${params.clubId}/inductions/${params.inductionId}/ispublished`,
+				method: "GET",
+			}),
+		}),
+		publishInduction: builder.mutation({
+			query: (params: {
+				clubId: number | string;
+				inductionId: number | string;
+				body: { opened_on: string; closing_on: string };
+			}) => ({
+				url: `clubs/${params.clubId}/inductions/${params.inductionId}`,
+				method: "PATCH",
+				data: params.body,
+			}),
+			invalidatesTags: ["CreateInduction", "Club"],
+		}),
 	}),
 });
 
@@ -72,4 +113,8 @@ export const {
 	useGetStagesQuery,
 	useCreateStagesMutation,
 	useGetOpenInductionsQuery,
+	useGetInductionDetailsQuery,
+	useUpdateInductionDetailsMutation,
+	useGetIsInductionPublishedQuery,
+	usePublishInductionMutation,
 } = inductionsApi;

@@ -4,19 +4,29 @@ import {
     getAllOpenInductions,
     getInductionDetails,
     getInductions,
-    publishInduction
+    getIsInductionPublished,
+    publishInduction,
+    updateInductionDetails
 } from '../controllers/induction.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { authorizeClubRole } from '../middlewares/role.middleware';
+import { authorizeClubRole, isAdmin } from '../middlewares/role.middleware';
 
 export const inductionRouter = Router({ mergeParams: true });
 
 inductionRouter.route('/').get(authMiddleware, getInductions);
 inductionRouter.route('/open').get(authMiddleware, getAllOpenInductions);
-inductionRouter.route('/:id').get(authMiddleware, getInductionDetails);
+inductionRouter
+    .route('/:inductionId')
+    .get(authMiddleware, authorizeClubRole, getInductionDetails);
+inductionRouter
+    .route('/:inductionId/ispublished')
+    .get(authMiddleware, authorizeClubRole, getIsInductionPublished);
 inductionRouter
     .route('/')
     .post(authMiddleware, authorizeClubRole, createInduction);
 inductionRouter
-    .route('/:id')
+    .route('/:inductionId/update')
+    .patch(authMiddleware, authorizeClubRole, isAdmin, updateInductionDetails);
+inductionRouter
+    .route('/:inductionId')
     .patch(authMiddleware, authorizeClubRole, publishInduction);

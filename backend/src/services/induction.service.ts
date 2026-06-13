@@ -1,3 +1,5 @@
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { UserRole } from '../types/roles.types';
 import { ApiError } from '../utils/ApiError';
 import { getUserInductionContext } from '../utils/getUserInductionContext';
 import { prisma } from '../utils/prisma';
@@ -110,45 +112,24 @@ const getAdminInductionDetails = async (inductionId: number) => {
         where: {
             id: inductionId
         },
-        include: {
-            applications: {
-                select: {
-                    user: {
-                        select: {
-                            name: true,
-                            profile_picture: true,
-                            branch: true,
-                            batch: true
-                        }
-                    },
-                    created_at: true,
-                    status: true,
-                    is_inducted: true
-                }
-            }
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            opened_on: true,
+            closing_on: true
         }
     });
 
     if (!induction) throw new ApiError(404, 'Induction does not exist');
 
-    const formattedInduction = {
-        ...induction,
-        applicants: induction.applications.length
-    };
-
-    return formattedInduction;
+    return induction;
 };
 
-const fetchInductionDetails = async (
-    inductionId: number,
-    userId: number,
-    clubId: number
-) => {
-    const userContext = await getUserInductionContext(clubId, userId);
+const fetchInductionDetails = async (inductionId: number, role: UserRole) => {
+    // if (role == UserRole.VISITOR) return getUserInductionDetails(inductionId);
 
-    if (userContext === 0) return getUserInductionDetails(inductionId, userId);
-
-    return getAdminInductionDetails(inductionId);
+    if (role == UserRole.ADMIN) return getAdminInductionDetails(inductionId);
 };
 
 const updateInductionDates = async (
@@ -179,7 +160,7 @@ const updateInductionDates = async (
     if (!induction) throw new ApiError(404, 'Induction not found');
 
     if (induction.forms.length === 0 || induction.stages.length === 0)
-        throw new ApiError(400, 'Induction is not complete');
+        throw new ApiError(400, 'Cannot publish, please add stages and form');
 
     const publishedInduction = await prisma.induction.update({
         where: {
@@ -265,4 +246,42 @@ const fetchAllOpenInductions = async (page: number = 1, limit: number = 6) => {
     };
 };
 
-export { fetchInductions, fetchInductionDetails, updateInductionDates, fetchAllOpenInductions };
+const updateInductionDetailsService = async (params: {
+    inductionId: number;
+    title: string;
+    description: string | undefined | null;
+}) => {
+    try {
+        const induction = await prisma.induction.update({
+            where: {
+                id: params.inductionId
+            },
+            data: {
+                title: params.title,
+                description: params.description ? params.description : null
+            },
+            select: {
+                title: true,
+                description: true,
+                id: true
+            }
+        });
+
+        return induction;
+    } catch (error: any) {
+        if (
+            error instanceof PrismaClientKnownRequestError &&
+            error.code === 'P2025'
+        )
+            throw new ApiError(404, 'Induction not found');
+        throw new ApiError(500, error.message);
+    }
+};
+
+export {
+    fetchInductions,
+    fetchInductionDetails,
+    updateInductionDates,
+    fetchAllOpenInductions,
+    updateInductionDetailsService
+};

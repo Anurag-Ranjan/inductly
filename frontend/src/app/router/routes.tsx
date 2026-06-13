@@ -19,6 +19,7 @@ import CreateForm from "../../pages/protectedPages/ClubDashboard/inductions/Crea
 import OpenInductions from "../../pages/protectedPages/OpenInductions/OpenInductions";
 import Apply from "../../pages/protectedPages/Apply/Apply";
 import MyApplications from "../../pages/protectedPages/MyApplications/MyApplications";
+import ScheduleInduction from "../../pages/protectedPages/ClubDashboard/inductions/ScheduleInduction/ScheduleInduction";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -39,10 +40,18 @@ export const routes = createRoutesFromElements(
 					<Route path=":clubId" element={<ClubLayout />}>
 						<Route path="" element={<ClubDashboard />} />
 						<Route path="create-induction" element={<CreateInduction />} />
+						<Route
+							path=":inductionId/edit-induction"
+							element={<CreateInduction />}
+						/>
 						<Route path=":inductionId/add-stages" element={<CreateStages />} />
 						<Route
 							path=":inductionId/create-form/:formId?"
 							element={<CreateForm />}
+						/>
+						<Route
+							path=":inductionId/schedule-induction"
+							element={<ScheduleInduction />}
 						/>
 					</Route>
 				</Route>

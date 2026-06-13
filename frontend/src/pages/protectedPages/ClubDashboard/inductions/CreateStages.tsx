@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "react-toastify";
 import {
 	useGetStagesQuery,
 	useCreateStagesMutation,
+	useGetIsInductionPublishedQuery,
 } from "../../../../features/induction/inductionApi";
 import Loader from "../../../../components/loaders/Loader";
 
@@ -13,10 +15,26 @@ export default function CreateStages() {
 		clubId: Number(clubId),
 		inductionId: Number(inductionId),
 	});
+	const { data: publishedData, isLoading: isCheckingPublished } =
+		useGetIsInductionPublishedQuery({
+			clubId: Number(clubId),
+			inductionId: Number(inductionId),
+		});
 	const [createStages, { isLoading: isCreating }] = useCreateStagesMutation();
+	const [newStages, setNewStages] = useState([{ name: "", description: "" }]);
 	const stages = data?.data ?? [];
 
-	const [newStages, setNewStages] = useState([{ name: "", description: "" }]);
+	useEffect(() => {
+		if (
+			!isCheckingPublished &&
+			publishedData?.data?.isPublished
+		) {
+			toast.warning("Induction is already live");
+			navigate(`/my-clubs/${clubId}`, { replace: true });
+		}
+	}, [isCheckingPublished, publishedData, clubId, navigate]);
+
+	if (isCheckingPublished) return <Loader />;
 
 	const addStageField = () => {
 		setNewStages([...newStages, { name: "", description: "" }]);
@@ -83,14 +101,15 @@ export default function CreateStages() {
 						<span className="text-slate-600 text-sm font-medium">
 							{stages.length > 0
 								? `${stages.length} stage${stages.length > 1 ? "s" : ""} defined`
-								: "No stages yet"}
+								: "No stages yet"}{" "}
+							• 50% Complete
 						</span>
 					</div>
-					<div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-						<div
-							className="h-full bg-indigo-600 transition-all duration-700 ease-out"
-							style={{ width: `${Math.min(stages.length * 25, 100)}%` }}
-						></div>
+					<div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex gap-1 mt-3">
+						<div className="h-full w-1/4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+						<div className="h-full w-1/4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+						<div className="h-full w-1/4 bg-slate-200 rounded-full"></div>
+						<div className="h-full w-1/4 bg-slate-200 rounded-full"></div>
 					</div>
 					<p className="text-slate-600 mt-4 text-base">
 						Create the sequential steps for your induction process (e.g., Online
@@ -226,7 +245,7 @@ export default function CreateStages() {
 				{/* Bottom Navigation */}
 				<div className="w-full max-w-3xl mt-12 pt-6 border-t border-slate-200 flex justify-between items-center">
 					<button
-						onClick={() => navigate(`/my-clubs/${clubId}/create-induction`)}
+						onClick={() => navigate(`/my-clubs/${clubId}/${inductionId}/edit-induction`)}
 						className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors active:scale-95"
 					>
 						<span className="material-symbols-outlined text-[20px]">
@@ -239,39 +258,12 @@ export default function CreateStages() {
 						disabled={isCreating || newStages.every((s) => !s.name.trim())}
 						className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{isCreating ? (
-							<>
-								<svg
-									className="animate-spin h-5 w-5 text-white"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-									/>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-									/>
-								</svg>
-								<span>Saving...</span>
-							</>
-						) : (
-							<>
-								<span>Save Stages</span>
-								<span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">
-									arrow_forward
-								</span>
-							</>
-						)}
+						<span>Save Stages</span>
+						<span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">
+							arrow_forward
+						</span>
 					</button>
+					{isCreating && <Loader />}
 				</div>
 			</main>
 

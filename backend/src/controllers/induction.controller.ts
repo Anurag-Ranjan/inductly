@@ -7,13 +7,13 @@ import {
     fetchAllOpenInductions,
     fetchInductionDetails,
     fetchInductions,
-    updateInductionDates
+    updateInductionDates,
+    updateInductionDetailsService
 } from '../services/induction.service';
 import {
     createInductionSchema,
     updateInductionSchema
 } from '../validations/induction.validation';
-import { MemberRole } from '@prisma/client';
 import { UserRole } from '../types/roles.types';
 
 const getInductions: RequestHandler = asyncHandler(async (req, res) => {
@@ -40,6 +40,36 @@ const getInductions: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const updateInductionDetails: RequestHandler = asyncHandler(
+    async (req, res) => {
+        const user = req.user;
+
+        if (!user) throw new ApiError(401, 'Unauthenticated');
+
+        const isAdmin = req.isAdmin;
+        if (!isAdmin) throw new ApiError(403, 'Umauthorised');
+
+        const inductionId = Number(req.params.inductionId);
+
+        if (!inductionId || isNaN(inductionId))
+            throw new ApiError(401, 'Invalid induction id');
+
+        const { title, description } = createInductionSchema.parse(req.body);
+
+        const updatedInduction = await updateInductionDetailsService({
+            inductionId,
+            title,
+            description
+        });
+
+        return res
+            .status(201)
+            .json(
+                new ApiResponse(201, updatedInduction, 'Updated successfully')
+            );
+    }
+);
+
 // getInduction details for an applicant should also return the president of the club and email of admins
 
 const getInductionDetails: RequestHandler = asyncHandler(async (req, res) => {
@@ -47,16 +77,17 @@ const getInductionDetails: RequestHandler = asyncHandler(async (req, res) => {
 
     if (!user) throw new ApiError(401, 'Unauthorised');
 
-    const inductionId = parseInt(req.params.id as string);
-    const clubId = parseInt(req.params.clubId as string);
+    const role = req.role;
 
-    if (!inductionId) throw new ApiError(400, 'Missing id field');
+    if (!role) throw new ApiError(403, 'Unauthorised');
 
-    const inductions = await fetchInductionDetails(
-        inductionId,
-        user.id,
-        clubId
-    );
+    const inductionId = Number(req.params.inductionId);
+    const clubId = Number(req.params.clubId);
+
+    if (!inductionId || isNaN(inductionId))
+        throw new ApiError(400, 'Missing id field');
+
+    const inductions = await fetchInductionDetails(inductionId, role);
 
     if (!inductions) throw new ApiError(500, 'Could not get inductions');
 
@@ -115,22 +146,14 @@ const publishInduction: RequestHandler = asyncHandler(async (req, res) => {
 
     if (!user) throw new ApiError(401, 'Unauthorised');
 
-    const clubId = parseInt(req.params.clubId as string);
+    const inductionId = Number(req.params.inductionId);
 
-    const inductionId = parseInt(req.params.id as string);
+    if (!inductionId || isNaN(inductionId))
+        throw new ApiError(400, 'Invalid induction id');
 
-    if (!clubId || !inductionId) throw new ApiError(400, 'Missing Fields');
+    const role = req.role;
 
-    const role = await prisma.membership.findUnique({
-        where: {
-            user_id_club_id: {
-                user_id: user?.id,
-                club_id: clubId
-            }
-        }
-    });
-
-    if (!role || role?.role != 'ADMIN') throw new ApiError(403, 'Forbidden');
+    if (!role || role != UserRole.ADMIN) throw new ApiError(403, 'Forbidden');
 
     const { opened_on, closing_on } = updateInductionSchema.parse(req.body);
 
@@ -171,10 +194,50 @@ const getAllOpenInductions: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
+const getIsInductionPublished: RequestHandler = asyncHandler(
+    async (req, res) => {
+        const user = req.user;
+        if (!user) throw new ApiError(401, 'Unauthenticated');
+
+        const role = req.role;
+        if (!role) throw new ApiError(403, 'Unauthorised');
+
+        const inductionId = Number(req.params.inductionId);
+
+        const induction = await prisma.induction.findUnique({
+            where: {
+                id: inductionId
+            },
+            select: {
+                id: true,
+                opened_on: true,
+                closing_on: true
+            }
+        });
+
+        const formattedInduction = {
+            ...induction,
+            isPublished: induction?.closing_on && induction.opened_on
+        };
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    formattedInduction,
+                    'Status fetched successfully'
+                )
+            );
+    }
+);
+
 export {
     getInductions,
     getInductionDetails,
     createInduction,
     publishInduction,
-    getAllOpenInductions
+    getAllOpenInductions,
+    getIsInductionPublished,
+    updateInductionDetails
 };

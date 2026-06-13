@@ -1,35 +1,94 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
-import { useCreateInductionMutation } from "../../../../features/induction/inductionApi";
+import { toast } from "react-toastify";
+import {
+	useCreateInductionMutation,
+	useGetInductionDetailsQuery,
+	useUpdateInductionDetailsMutation,
+} from "../../../../features/induction/inductionApi";
+import Loader from "../../../../components/loaders/Loader";
 
 export default function CreateInduction() {
-	const { clubId } = useParams();
+	const { clubId, inductionId } = useParams();
 	const { isAdmin } = useOutletContext<any>();
 	const navigate = useNavigate();
-	const [createInduction, { isLoading }] = useCreateInductionMutation();
+	const [createInduction, { isLoading: isCreating }] =
+		useCreateInductionMutation();
+	const [updateInductionDetails, { isLoading: isUpdating }] =
+		useUpdateInductionDetailsMutation();
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
+	const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+	const isEditing = !!inductionId;
+
+	const { data: details } = useGetInductionDetailsQuery(
+		{ clubId: clubId!, inductionId: inductionId! },
+		{ skip: !isEditing },
+	);
 
 	useEffect(() => {
 		if (!isAdmin) navigate(`/my-clubs/${clubId}`, { replace: true });
 	}, [isAdmin, clubId, navigate]);
 
-	const handleSubmit = async (e) => {
+	useEffect(() => {
+		if (details?.data) {
+			setTitle(details.data.title ?? "");
+			setDescription(details.data.description ?? "");
+		}
+	}, [details]);
+
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			const response = await createInduction({
-				body: { title, description },
-				clubId: Number(clubId),
-			}).unwrap();
-			const inductionId = response.data.id;
-			navigate(`/my-clubs/${clubId}/${inductionId}/add-stages`);
+			if (isEditing) {
+				await updateInductionDetails({
+					clubId: Number(clubId),
+					inductionId: Number(inductionId),
+					body: { title, description },
+				}).unwrap();
+				navigate(`/my-clubs/${clubId}/${inductionId}/add-stages`);
+			} else {
+				const response = await createInduction({
+					body: { title, description },
+					clubId: Number(clubId),
+				}).unwrap();
+				const newInductionId = response.data.id;
+				navigate(`/my-clubs/${clubId}/${newInductionId}/add-stages`);
+			}
 		} catch (err) {
-			console.error("Failed to create induction:", err);
+			console.error("Failed to save induction:", err);
+		}
+	};
+
+	const handleSaveDraft = async () => {
+		setIsSavingDraft(true);
+		try {
+			if (isEditing) {
+				await updateInductionDetails({
+					clubId: Number(clubId),
+					inductionId: Number(inductionId),
+					body: { title, description },
+				}).unwrap();
+			} else {
+				await createInduction({
+					body: { title, description },
+					clubId: Number(clubId),
+				}).unwrap();
+			}
+			toast.success("Draft saved successfully");
+			navigate(`/my-clubs/${clubId}`);
+		} catch {
+			toast.error("Failed to save draft");
+		} finally {
+			setIsSavingDraft(false);
 		}
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-slate-50 font-sans relative z-0 selection:bg-indigo-100 selection:text-indigo-900">
+		<>
+			{(isCreating || isUpdating || isSavingDraft) && <Loader />}
+			<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-slate-50 font-sans relative z-0 selection:bg-indigo-100 selection:text-indigo-900">
 			{/* Material Symbols Import */}
 			<style
 				dangerouslySetInnerHTML={{
@@ -85,11 +144,14 @@ export default function CreateInduction() {
 						{/* Header */}
 						<div className="space-y-1">
 							<h1 className="text-xl font-semibold text-slate-900">
-								Start your new induction
+								{isEditing
+									? "Update induction details"
+									: "Start your new induction"}
 							</h1>
 							<p className="text-base text-slate-600">
-								Fill in the basic information to define your induction program's
-								identity.
+								{isEditing
+									? "Modify the basic information of your induction program."
+									: "Fill in the basic information to define your induction program's identity."}
 							</p>
 						</div>
 
@@ -146,7 +208,9 @@ export default function CreateInduction() {
 						{/* Action Footer */}
 						<div className="pt-6 flex items-center justify-between border-t border-slate-100">
 							<button
-								className="px-6 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+								onClick={handleSaveDraft}
+								disabled={isSavingDraft}
+								className="px-6 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 								type="button"
 							>
 								Save as Draft
@@ -154,40 +218,12 @@ export default function CreateInduction() {
 							<button
 								className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-2.5 rounded-lg text-sm font-medium text-white shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
 								type="submit"
-								disabled={isLoading}
+								disabled={isCreating || isUpdating}
 							>
-								{isLoading ? (
-									<>
-										<svg
-											className="animate-spin h-5 w-5 text-white"
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											viewBox="0 0 24 24"
-										>
-											<circle
-												className="opacity-25"
-												cx="12"
-												cy="12"
-												r="10"
-												stroke="currentColor"
-												strokeWidth="4"
-											/>
-											<path
-												className="opacity-75"
-												fill="currentColor"
-												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-											/>
-										</svg>
-										<span>Creating...</span>
-									</>
-								) : (
-									<>
-										<span>Add Stages</span>
-										<span className="material-symbols-outlined text-[18px]">
-											arrow_forward
-										</span>
-									</>
-								)}
+								<span>{isEditing ? "Edit Stages" : "Add Stages"}</span>
+								<span className="material-symbols-outlined text-[18px]">
+									arrow_forward
+								</span>
 							</button>
 						</div>
 					</form>
@@ -210,5 +246,6 @@ export default function CreateInduction() {
 				</div>
 			</main>
 		</div>
+		</>
 	);
 }
