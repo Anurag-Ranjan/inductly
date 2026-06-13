@@ -3,7 +3,9 @@ import Loader from "../../components/loaders/Loader";
 import { useSelector } from "react-redux";
 
 const PrivateRoute = () => {
-	const { loading, isAuthenticated, user } = useSelector((state) => state.auth);
+	const { loading, isAuthenticated, user } = useSelector(
+		(state: any) => state.auth,
+	);
 	const location = useLocation();
 
 	if (!isAuthenticated) {
@@ -16,7 +18,7 @@ const PrivateRoute = () => {
 		return <Navigate to="/dashboard" replace />;
 	}
 
-	if (!user?.isOnboarded && location.pathname === "/dashboard") {
+	if (!user?.isOnboarded && location.pathname !== "/onboard") {
 		return <Navigate to="/onboard" replace />;
 	}
 
