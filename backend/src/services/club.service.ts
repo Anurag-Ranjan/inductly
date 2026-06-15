@@ -1,10 +1,12 @@
+import { MemberRole } from '@prisma/client';
 import { tokenPayload } from '../types/jwt.types';
+import { UserRole } from '../types/roles.types';
 import { ApiError } from '../utils/ApiError';
-import { getUserClubContext } from '../utils/getUserClubContext';
+
 import { prisma } from '../utils/prisma';
 import { ClubInput } from '../validations/club.validation';
 
-const fetchAllClubs = async (page: number, limit: number, userId: number) => {
+const fetchMyClubs = async (page: number, limit: number, userId: number) => {
     const skip = (page - 1) * limit;
     const [clubs, total] = await Promise.all([
         prisma.membership.findMany({
@@ -292,4 +294,92 @@ const updateClubDetails = async (clubDetails: ClubInput, clubId: number) => {
     return updatedClub;
 };
 
-export { fetchAllClubs, fetchClubDetails, createClub, updateClubDetails };
+const getClubDashboardService = async (
+    clubId: number,
+    role: UserRole,
+    userId: number
+) => {
+    if (role == UserRole.VISITOR)
+        throw new ApiError(403, 'Unauthorised, visitors cant access dashboard');
+
+    const dashBoardDetails =
+        role === UserRole.ADMIN
+            ? await getAdminView(clubId, userId)
+            : await getMemberView(clubId, userId);
+
+    return dashBoardDetails;
+};
+
+const getAllClubsService = async () => {
+    const clubs = await prisma.club.findMany({
+        orderBy: {
+            id: 'asc'
+        },
+        select: {
+            id: true,
+            name: true,
+            instagram: true,
+            linkedin: true,
+            website: true,
+            logo: true,
+            description: true,
+            inductions: {
+                select: {
+                    opened_on: true,
+                    closing_on: true
+                }
+            },
+            memberships: {
+                where: {
+                    role: MemberRole.PRESIDENT || MemberRole.VICE_PRESIDENT
+                },
+                select: {
+                    role: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profile_picture: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const formattedClubs = clubs.map((club) => {
+        const presidentMembership = club.memberships.find(
+            (membership) => membership.role === MemberRole.PRESIDENT
+        );
+        const vpMembership = club.memberships.find(
+            (membership) => membership.role === MemberRole.VICE_PRESIDENT
+        );
+
+        return {
+            id: club.id,
+            name: club.name,
+            instagram: club.instagram,
+            linkedin: club.linkedin,
+            website: club.website,
+            logo: club.logo,
+            description: club.description,
+            isInducting:
+                club.inductions[0]?.opened_on &&
+                club.inductions[0].closing_on &&
+                club.inductions[0]?.closing_on > new Date(),
+            president: presidentMembership?.user || null,
+            vice_president: vpMembership?.user || null,
+        };
+    });
+
+    return formattedClubs;
+};
+
+export {
+    fetchMyClubs,
+    fetchClubDetails,
+    createClub,
+    updateClubDetails,
+    getClubDashboardService,
+    getAllClubsService
+};

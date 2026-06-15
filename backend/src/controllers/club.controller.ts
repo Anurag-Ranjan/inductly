@@ -4,24 +4,38 @@ import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
     createClub,
-    fetchAllClubs,
+    fetchMyClubs,
     fetchClubDetails,
-    updateClubDetails
+    getClubDashboardService,
+    updateClubDetails,
+    getAllClubsService
 } from '../services/club.service';
 import { ClubInput, clubSchema } from '../validations/club.validation';
 import { prisma } from '../utils/prisma';
 
-const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
+const getMyClubs: RequestHandler = asyncHandler(async (req, res) => {
     if (!req.user) throw new ApiError(401, 'Unauthorised access');
 
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 3;
 
-    const data = await fetchAllClubs(page, limit, req.user.id);
+    const data = await fetchMyClubs(page, limit, req.user.id);
 
     return res
         .status(200)
         .json(new ApiResponse(200, data, 'Clubs fetched successfully'));
+});
+
+const getAllClubs: RequestHandler = asyncHandler(async (req, res) => {
+    console.log('Requested');
+    const user = req.user;
+
+    if (!user) throw new ApiError(401, 'Unauthenticated');
+
+    const clubs = await getAllClubsService();
+    return res
+        .status(200)
+        .json(new ApiResponse(200, clubs, 'All clubs fetched'));
 });
 
 const getClubDetails: RequestHandler = asyncHandler(async (req, res) => {
@@ -88,4 +102,37 @@ const updateClub: RequestHandler = asyncHandler(async (req, res) => {
     return res.status;
 });
 
-export { getAllClubs, getClubDetails, registerClub, updateClub };
+const getClubDashboard: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+    if (!role) throw new ApiError(403, 'Unauthorised');
+
+    const userId = req.user?.id!;
+    const clubId = Number(req.params.clubId);
+
+    if (!clubId || isNaN(clubId)) throw new ApiError(400, 'Invalid club id');
+
+    const dashboardDetails = await getClubDashboardService(
+        clubId,
+        role,
+        userId
+    );
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                dashboardDetails,
+                'Club dashboard fetched successfully'
+            )
+        );
+});
+
+export {
+    getMyClubs,
+    getAllClubs,
+    getClubDetails,
+    registerClub,
+    updateClub,
+    getClubDashboard
+};

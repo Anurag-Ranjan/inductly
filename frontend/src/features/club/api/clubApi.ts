@@ -26,7 +26,15 @@ export const clubsApi = baseApi.injectEndpoints({
 
 			providesTags: ["Club"],
 		}),
+		getAllClubs: builder.query({
+			query: () => ({
+				url: "/clubs/all",
+				method: "GET",
+			}),
+			providesTags: ["AllClubs"],
+		}),
 	}),
 });
 
-export const { useGetClubQuery, useGetMyClubsQuery } = clubsApi;
+export const { useGetClubQuery, useGetMyClubsQuery, useGetAllClubsQuery } =
+	clubsApi;

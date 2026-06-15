@@ -16,6 +16,7 @@ export const baseApi = createApi({
 		"Form",
 		"OpenInductions",
 		"MyApplications",
+		"AllClubs",
 	],
 
 	endpoints: () => ({}),

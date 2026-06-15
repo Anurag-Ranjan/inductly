@@ -20,6 +20,7 @@ import OpenInductions from "../../pages/protectedPages/OpenInductions/OpenInduct
 import Apply from "../../pages/protectedPages/Apply/Apply";
 import MyApplications from "../../pages/protectedPages/MyApplications/MyApplications";
 import ScheduleInduction from "../../pages/protectedPages/ClubDashboard/inductions/ScheduleInduction/ScheduleInduction";
+import ExploreClubs from "../../pages/protectedPages/ExploreClubs/ExploreClubs";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -34,6 +35,7 @@ export const routes = createRoutesFromElements(
 			<Route path="onboard" element={<Onboarding />}></Route>
 			<Route element={<ProtectedLayout />}>
 				<Route path="dashboard" element={<DashBoard />}></Route>
+				<Route path="explore/clubs" element={<ExploreClubs />}></Route>
 				<Route path="profile" element={<Profile />}></Route>
 				<Route path="my-clubs" element={<MyClubsLayout />}>
 					<Route path="" element={<MyClubs />} />

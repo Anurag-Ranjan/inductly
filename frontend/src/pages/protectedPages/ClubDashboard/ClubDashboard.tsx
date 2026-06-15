@@ -1,5 +1,4 @@
 import { Link, useOutletContext } from "react-router";
-import VisitorView from "./views/VisitorView";
 import MemberView from "./views/MemberView";
 import AdminView from "./views/AdminView";
 
@@ -9,10 +8,7 @@ export default function ClubDashboard() {
 		isAdmin: boolean;
 	}>();
 
-	console.log("Is an admin ? ", data);
-
 	const view = {
-		VISITOR: <VisitorView />,
 		MEMBER: <MemberView />,
 		ADMIN: <AdminView />,
 	}[data.role as string];
