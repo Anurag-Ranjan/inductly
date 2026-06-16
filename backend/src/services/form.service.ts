@@ -276,6 +276,14 @@ const submitApplicationService = async (params: submitApplicationParams) => {
         }
     });
 
+    const applicationStageProgress =
+        await prisma.applicationStageProgress.create({
+            data: {
+                application_id: application.id,
+                stage_id: firstStage.id
+            }
+        });
+
     if (existingResponse) {
         if (existingResponse.application_id !== null) {
             throw new ApiError(409, 'Application has already been submitted');

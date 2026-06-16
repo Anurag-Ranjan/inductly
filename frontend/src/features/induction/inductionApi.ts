@@ -104,6 +104,15 @@ const inductionsApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["CreateInduction", "Club"],
 		}),
+		getInductionDashboard: builder.query({
+			query: (params: {
+				clubId: number | string;
+				inductionId: number | string;
+			}) => ({
+				url: `clubs/${params.clubId}/inductions/${params.inductionId}/dashboard`,
+				method: "GET",
+			}),
+		}),
 	}),
 });
 
@@ -117,4 +126,5 @@ export const {
 	useUpdateInductionDetailsMutation,
 	useGetIsInductionPublishedQuery,
 	usePublishInductionMutation,
+	useGetInductionDashboardQuery,
 } = inductionsApi;

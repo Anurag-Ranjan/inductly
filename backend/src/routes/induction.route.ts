@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
     createInduction,
     getAllOpenInductions,
+    getInductionDashboard,
     getInductionDetails,
     getInductions,
     getIsInductionPublished,
@@ -18,6 +19,9 @@ inductionRouter.route('/open').get(authMiddleware, getAllOpenInductions);
 inductionRouter
     .route('/:inductionId')
     .get(authMiddleware, authorizeClubRole, getInductionDetails);
+inductionRouter
+    .route('/:inductionId/dashboard')
+    .get(authMiddleware, authorizeClubRole, getInductionDashboard);
 inductionRouter
     .route('/:inductionId/ispublished')
     .get(authMiddleware, authorizeClubRole, getIsInductionPublished);

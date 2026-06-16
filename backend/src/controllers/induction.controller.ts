@@ -7,6 +7,7 @@ import {
     fetchAllOpenInductions,
     fetchInductionDetails,
     fetchInductions,
+    getInductionDashboardService,
     updateInductionDates,
     updateInductionDetailsService
 } from '../services/induction.service';
@@ -232,6 +233,37 @@ const getIsInductionPublished: RequestHandler = asyncHandler(
     }
 );
 
+const getInductionDashboard: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+
+    if (!role || role == UserRole.VISITOR)
+        throw new ApiError(403, 'Unauthorised');
+
+    const inductionId = Number(req.params.inductionId);
+    const clubId = Number(req.params.clubId);
+
+    if (!clubId || isNaN(clubId))
+        throw new ApiError(400, 'Invalid induction id');
+
+    if (!inductionId || isNaN(inductionId))
+        throw new ApiError(400, 'Invalid induction id');
+
+    const inductionDashboardDetails = await getInductionDashboardService({
+        inductionId,
+        clubId
+    });
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                inductionDashboardDetails,
+                'Dashboard fetched successfully'
+            )
+        );
+});
+
 export {
     getInductions,
     getInductionDetails,
@@ -239,5 +271,6 @@ export {
     publishInduction,
     getAllOpenInductions,
     getIsInductionPublished,
-    updateInductionDetails
+    updateInductionDetails,
+    getInductionDashboard
 };

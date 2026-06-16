@@ -194,11 +194,25 @@ export default function AdminView() {
 											Status
 										</p>
 										<p className="text-xl font-semibold text-slate-900">
-											{induction.is_published ? "Open" : "Draft"}
+											{induction.status === "ACTIVE"
+												? "Open"
+												: induction.status === "FINISHED"
+													? "Finished"
+													: "Draft"}
 										</p>
 									</div>
 								</div>
 								<div className="flex gap-2">
+									<button
+										onClick={() =>
+											navigate(
+												`/my-clubs/${clubId}/${induction.id}/induction-dashboard`,
+											)
+										}
+										className="flex-1 bg-indigo-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-indigo-700 transition-all active:scale-95"
+									>
+										Dashboard
+									</button>
 									<button
 										onClick={() =>
 											navigate(

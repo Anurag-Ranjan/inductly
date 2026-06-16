@@ -21,6 +21,7 @@ import Apply from "../../pages/protectedPages/Apply/Apply";
 import MyApplications from "../../pages/protectedPages/MyApplications/MyApplications";
 import ScheduleInduction from "../../pages/protectedPages/ClubDashboard/inductions/ScheduleInduction/ScheduleInduction";
 import ExploreClubs from "../../pages/protectedPages/ExploreClubs/ExploreClubs";
+import InductionDashboard from "../../pages/protectedPages/ClubDashboard/inductions/InductionDashboard/InductionDasboard";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -41,6 +42,10 @@ export const routes = createRoutesFromElements(
 					<Route path="" element={<MyClubs />} />
 					<Route path=":clubId" element={<ClubLayout />}>
 						<Route path="" element={<ClubDashboard />} />
+						<Route
+							path=":inductionId/induction-dashboard"
+							element={<InductionDashboard />}
+						/>
 						<Route path="create-induction" element={<CreateInduction />} />
 						<Route
 							path=":inductionId/edit-induction"
