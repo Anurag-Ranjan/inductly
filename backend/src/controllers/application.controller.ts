@@ -2,7 +2,10 @@ import { RequestHandler } from 'express';
 import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
-import { getMyApplicationsService } from '../services/application.service';
+import {
+    getApplicationDetailsService,
+    getMyApplicationsService
+} from '../services/application.service';
 
 const getMyApplications: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -21,12 +24,25 @@ const getMyApplications: RequestHandler = asyncHandler(async (req, res) => {
         );
 });
 
-const getApplicationDetail: RequestHandler = asyncHandler(
-    async (req, res) => {}
-);
+const getApplicationDetails: RequestHandler = asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) throw new ApiError(401, 'Unauthenticated');
 
-const getApplicationsForAnInduction: RequestHandler = asyncHandler(
-    async (req, res) => {}
-);
+    const applicationId = Number(req.params.applicationId);
+    if (!applicationId || isNaN(applicationId))
+        throw new ApiError(401, 'Invalid application id provided');
 
-export { getMyApplications };
+    const applicationDetails = await getApplicationDetailsService(applicationId);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                applicationDetails,
+                'Application details fetched successfully'
+            )
+        );
+});
+
+export { getMyApplications, getApplicationDetails };

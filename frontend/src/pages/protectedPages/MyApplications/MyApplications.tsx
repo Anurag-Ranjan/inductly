@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Navigate } from "react-router";
 import { useGetMyApplicationsQuery } from "../../../features/application/applicationApi";
 import Loader from "../../../components/loaders/Loader";
 import EmptyState from "../../../features/application/components/EmptyState";
 import { STATUS_CONFIG } from "../../../features/application/constants/application.constant";
+import ApplicationDetailsCard from "../../../components/ui/ApplicationDetailsCard";
 
 /**
  * StageBar
@@ -142,6 +144,9 @@ function ApplicationCard({
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function MyApplications() {
+	const [selectedApplicationId, setSelectedApplicationId] = useState<
+		number | null
+	>(null);
 	const {
 		data: result,
 		isLoading,
@@ -187,7 +192,9 @@ export default function MyApplications() {
 								completedStages={
 									app.stage_number >= 0 ? app.stage_number + 1 : 0
 								}
-								onAction={() => console.log("action clicked for", app.id)}
+								onAction={() =>
+									setSelectedApplicationId(app.id)
+								}
 							/>
 						))}
 					</div>
@@ -195,6 +202,20 @@ export default function MyApplications() {
 					<EmptyState />
 				)}
 			</main>
+			{selectedApplicationId && (
+				<div className="fixed inset-0 z-50">
+					<div
+						className="absolute inset-0 bg-black/40"
+						onClick={() => setSelectedApplicationId(null)}
+					/>
+					<div className="relative z-10">
+						<ApplicationDetailsCard
+							applicationId={selectedApplicationId}
+							onClose={() => setSelectedApplicationId(null)}
+						/>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

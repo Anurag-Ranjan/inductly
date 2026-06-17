@@ -9,7 +9,14 @@ const applicationApi = baseApi.injectEndpoints({
 			}),
 			providesTags: ["MyApplications"],
 		}),
+		getApplicationDetails: builder.query({
+			query: (applicationId: number) => ({
+				url: `/applications/${applicationId}/details`,
+				method: "GET",
+			}),
+		}),
 	}),
 });
 
-export const { useGetMyApplicationsQuery } = applicationApi;
+export const { useGetMyApplicationsQuery, useGetApplicationDetailsQuery } =
+	applicationApi;

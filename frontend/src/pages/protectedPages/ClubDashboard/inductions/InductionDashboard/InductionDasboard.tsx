@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import dayjs from "dayjs";
 import { useGetInductionDashboardQuery } from "../../../../../features/induction/inductionApi";
@@ -87,7 +87,15 @@ const getStageIcon = (stageName: string | undefined) => {
 export default function InductionDashboard() {
 	const { clubId, inductionId } = useParams();
 	const navigate = useNavigate();
-	const { isAdmin } = useOutletContext<{ isAdmin: boolean }>();
+	const { data: clubData, isAdmin } = useOutletContext<{ data: any; isAdmin: boolean }>();
+	const role = clubData?.role;
+
+	useEffect(() => {
+		if (role === "VISITOR") {
+			navigate("/dashboard", { replace: true });
+		}
+	}, [role, navigate]);
+
 	const { data: raw, isLoading } = useGetInductionDashboardQuery({
 		clubId: Number(clubId),
 		inductionId: Number(inductionId),

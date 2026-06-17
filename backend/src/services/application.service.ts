@@ -1,3 +1,4 @@
+import { ApiError } from '../utils/ApiError';
 import { prisma } from '../utils/prisma';
 
 const getMyApplicationsService = async ({ userId }: { userId: number }) => {
@@ -66,4 +67,41 @@ const getMyApplicationsService = async ({ userId }: { userId: number }) => {
     return formattedApplications;
 };
 
-export { getMyApplicationsService };
+const getApplicationDetailsService = async (applicationId: number) => {
+    const application = await prisma.application.findFirst({
+        where: {
+            id: applicationId
+        },
+        select: {
+            id: true,
+            created_at: true,
+            status: true,
+            remarks: true,
+            induction: {
+                select: {
+                    stages: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
+            },
+            stageProgress: {
+                select: {
+                    id: true,
+                    stage_id: true,
+                    status: true,
+                    score: true,
+                    notes: true
+                }
+            }
+        }
+    });
+
+    if (!application) throw new ApiError(404, 'Application not found');
+
+    return application;
+};
+
+export { getMyApplicationsService, getApplicationDetailsService };
