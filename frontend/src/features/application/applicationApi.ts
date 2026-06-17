@@ -15,8 +15,30 @@ const applicationApi = baseApi.injectEndpoints({
 				method: "GET",
 			}),
 		}),
+		scoreApplicant: builder.mutation({
+			query: ({
+				applicationId,
+				stageId,
+				clubId,
+				body,
+			}: {
+				applicationId: number;
+				stageId: number;
+				clubId: number;
+				body: { status: string; notes?: string; score?: number };
+			}) => ({
+				url: `/applications/${applicationId}/stages/${stageId}`,
+				method: "PATCH",
+				params: { clubId },
+				data: body,
+			}),
+			invalidatesTags: ["MyApplications", "Applications"],
+		}),
 	}),
 });
 
-export const { useGetMyApplicationsQuery, useGetApplicationDetailsQuery } =
-	applicationApi;
+export const {
+	useGetMyApplicationsQuery,
+	useGetApplicationDetailsQuery,
+	useScoreApplicantMutation,
+} = applicationApi;

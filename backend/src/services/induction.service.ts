@@ -378,6 +378,7 @@ const getInductionDashboardService = async (params: {
             status: applicant.status,
             remarks: applicant.remarks,
             is_inducted: applicant.is_inducted,
+            currentStageId: applicant.currentStage?.id,
             currentStageName: applicant.currentStage?.name,
             currentStageStatus: applicant.stageProgress.filter(
                 (stage) => stage.stage.id === applicant.currentStage!.id

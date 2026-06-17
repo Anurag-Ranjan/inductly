@@ -102,6 +102,7 @@ export default function InductionDashboard() {
 	});
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
 	const [activeTab, setActiveTab] = useState("applicants");
 	const [searchTerm, setSearchTerm] = useState("");
 
@@ -424,7 +425,10 @@ export default function InductionDashboard() {
 												{isAdmin && (
 													<td className="px-6 py-4 text-right">
 														<button
-															onClick={() => setDrawerOpen(true)}
+															onClick={() => {
+																setSelectedApplicant(a);
+																setDrawerOpen(true);
+															}}
 															className="px-3 py-1.5 text-xs font-semibold text-white bg-[#3525cd] rounded-lg hover:opacity-90 transition-all"
 														>
 															Score
@@ -448,7 +452,18 @@ export default function InductionDashboard() {
 				</section>
 			</main>
 
-			<ScoringDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+			<ScoringDrawer
+				open={drawerOpen}
+				onClose={() => {
+					setDrawerOpen(false);
+					setSelectedApplicant(null);
+				}}
+				clubId={Number(clubId)}
+				applicationId={selectedApplicant?.application_id}
+				stageId={selectedApplicant?.currentStageId}
+				applicantName={selectedApplicant?.name}
+				stageName={selectedApplicant?.currentStageName}
+			/>
 
 			<button className="md:hidden fixed bottom-4 right-4 w-14 h-14 bg-[#712ae2] text-white rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform">
 				<Icon name="add" className="w-6 h-6" />

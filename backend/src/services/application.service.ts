@@ -1,3 +1,4 @@
+import { ApplicationStatus, StageStatus } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { prisma } from '../utils/prisma';
 
@@ -104,4 +105,85 @@ const getApplicationDetailsService = async (applicationId: number) => {
     return application;
 };
 
-export { getMyApplicationsService, getApplicationDetailsService };
+const scoreApplicantService = async (
+    applicationId: number,
+    clubId: number,
+    stageId: number,
+    data: {}
+) => {
+    const { status, notes, score }: any = data;
+    if (status != StageStatus.PASSED || status != StageStatus.FAILED)
+        throw new ApiError(401, 'Please provide correct status');
+    const application = await prisma.application.findFirst({
+        where: {
+            id: applicationId
+        },
+        select: {
+            id: true,
+            induction: {
+                select: {
+                    club_id: true
+                }
+            },
+            current_stage_id: true,
+            status: true
+        }
+    });
+
+    if (
+        application?.status === ApplicationStatus.ACCEPTED ||
+        application?.status === ApplicationStatus.REJECTED
+    ) {
+        throw new ApiError(401, 'Cannot score accepted or rejected candidates');
+    }
+
+    if (application?.induction.club_id !== clubId)
+        throw new ApiError(403, 'Unauthorised');
+
+    if (application.current_stage_id !== stageId)
+        throw new ApiError(401, 'Cannot rank this stage');
+
+    const updatedScore = await prisma.applicationStageProgress.update({
+        where: {
+            application_id_stage_id: {
+                application_id: application.id,
+                stage_id: application.current_stage_id
+            }
+        },
+        data: {
+            notes: notes,
+            status: status,
+            score: score
+        }
+    });
+
+    if (updatedScore.status === StageStatus.FAILED) {
+        await prisma.application.update({
+            where: {
+                id: application.id
+            },
+            data: {
+                status: ApplicationStatus.REJECTED
+            }
+        });
+    }
+
+    if (updatedScore.status === StageStatus.PASSED) {
+        await prisma.application.update({
+            where: {
+                id: application.id
+            },
+            data: {
+                status: ApplicationStatus.SHORTLISTED
+            }
+        });
+    }
+
+    return updatedScore;
+};
+
+export {
+    getMyApplicationsService,
+    getApplicationDetailsService,
+    scoreApplicantService
+};
