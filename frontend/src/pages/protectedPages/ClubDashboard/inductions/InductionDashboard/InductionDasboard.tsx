@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import dayjs from "dayjs";
 import { useGetInductionDashboardQuery } from "../../../../../features/induction/inductionApi";
+import { useScoreApplicantMutation } from "../../../../../features/application/applicationApi";
 import ScoringDrawer from "./components/ScoringDrawer/ScoringDrawer";
 import Icon from "./components/Icon/Icon";
 import PrimaryStatCard from "./components/PrimaryStatCard/PrimaryStatCard";
@@ -39,7 +40,15 @@ const getStatusStyle = (status: string | undefined) =>
 		className: "bg-gray-100 text-gray-600",
 	};
 
-const Avatar = ({ name, src, size = "w-10 h-10" }: { name: string; src?: string | null; size?: string }) => {
+const Avatar = ({
+	name,
+	src,
+	size = "w-10 h-10",
+}: {
+	name: string;
+	src?: string | null;
+	size?: string;
+}) => {
 	const initials = name
 		.split(" ")
 		.map((n) => n[0])
@@ -62,7 +71,9 @@ const Avatar = ({ name, src, size = "w-10 h-10" }: { name: string; src?: string 
 			className={`${size} rounded-full object-cover`}
 			onError={(e) => {
 				(e.target as HTMLImageElement).style.display = "none";
-				((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = "flex";
+				(
+					(e.target as HTMLImageElement).nextSibling as HTMLElement
+				).style.display = "flex";
 			}}
 		/>
 	) : (
@@ -78,7 +89,12 @@ const getStageIcon = (stageName: string | undefined) => {
 	if (!stageName) return "code";
 	const name = stageName.toLowerCase();
 	if (name.includes("interview") || name.includes("panel")) return "group";
-	if (name.includes("reason") || name.includes("logic") || name.includes("test") || name.includes("exam"))
+	if (
+		name.includes("reason") ||
+		name.includes("logic") ||
+		name.includes("test") ||
+		name.includes("exam")
+	)
 		return "psychology";
 	if (name.includes("screen") || name.includes("review")) return "visibility";
 	return "code";
@@ -87,7 +103,10 @@ const getStageIcon = (stageName: string | undefined) => {
 export default function InductionDashboard() {
 	const { clubId, inductionId } = useParams();
 	const navigate = useNavigate();
-	const { data: clubData, isAdmin } = useOutletContext<{ data: any; isAdmin: boolean }>();
+	const { data: clubData, isAdmin } = useOutletContext<{
+		data: any;
+		isAdmin: boolean;
+	}>();
 	const role = clubData?.role;
 
 	useEffect(() => {
@@ -100,6 +119,17 @@ export default function InductionDashboard() {
 		clubId: Number(clubId),
 		inductionId: Number(inductionId),
 	});
+
+	const [scoreApplicant] = useScoreApplicantMutation();
+
+	const handleMoveToNextStage = (applicant: any) => {
+		scoreApplicant({
+			applicationId: applicant.application_id,
+			stageId: applicant.currentStageId,
+			clubId: Number(clubId),
+			body: { status: "PASSED" },
+		});
+	};
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
@@ -197,9 +227,7 @@ export default function InductionDashboard() {
 					<div className="flex flex-wrap gap-2">
 						<button
 							onClick={() =>
-								navigate(
-									`/my-clubs/${clubId}/${inductionId}/edit-induction`,
-								)
+								navigate(`/my-clubs/${clubId}/${inductionId}/edit-induction`)
 							}
 							className="flex items-center gap-1.5 px-4 py-2 bg-[#eae6f4] hover:bg-[#e4e1ee] transition-all rounded-lg border border-[#c7c4d8] text-sm font-medium active:scale-95"
 						>
@@ -208,9 +236,7 @@ export default function InductionDashboard() {
 						</button>
 						<button
 							onClick={() =>
-								navigate(
-									`/my-clubs/${clubId}/${inductionId}/add-stages`,
-								)
+								navigate(`/my-clubs/${clubId}/${inductionId}/add-stages`)
 							}
 							className="flex items-center gap-1.5 px-4 py-2 bg-[#eae6f4] hover:bg-[#e4e1ee] transition-all rounded-lg border border-[#c7c4d8] text-sm font-medium active:scale-95"
 						>
@@ -219,9 +245,7 @@ export default function InductionDashboard() {
 						</button>
 						<button
 							onClick={() =>
-								navigate(
-									`/my-clubs/${clubId}/${inductionId}/create-form`,
-								)
+								navigate(`/my-clubs/${clubId}/${inductionId}/create-form`)
 							}
 							className="flex items-center gap-1.5 px-4 py-2 bg-[#3525cd] text-white hover:opacity-90 transition-all rounded-lg text-sm font-medium shadow-sm active:scale-95"
 						>
@@ -347,7 +371,7 @@ export default function InductionDashboard() {
 											"Current Stage",
 											"Status",
 											"Latest Score",
-											...isAdmin ? ["Actions"] : [],
+											...(isAdmin ? ["Actions"] : []),
 										].map((h) => (
 											<th
 												key={h}
@@ -362,9 +386,7 @@ export default function InductionDashboard() {
 								</thead>
 								<tbody className="divide-y divide-[#c7c4d8]">
 									{filtered.map((a: any) => {
-										const statusStyle = getStatusStyle(
-											a.currentStageStatus,
-										);
+										const statusStyle = getStatusStyle(a.currentStageStatus);
 										const scoreDisplay =
 											a.currentStageScore != null
 												? `${Number(a.currentStageScore).toFixed(1)}/10`
@@ -372,7 +394,8 @@ export default function InductionDashboard() {
 										const scoreStyle =
 											a.currentStageScore != null && a.currentStageScore >= 7
 												? "text-emerald-600 font-medium"
-												: a.currentStageScore != null && a.currentStageScore >= 4
+												: a.currentStageScore != null &&
+													  a.currentStageScore >= 4
 													? "text-[#3525cd] font-medium"
 													: a.currentStageScore != null
 														? "text-red-600 font-medium"
@@ -385,10 +408,7 @@ export default function InductionDashboard() {
 											>
 												<td className="px-6 py-4">
 													<div className="flex items-center gap-4">
-														<Avatar
-															name={a.name}
-															src={a.profile_picture}
-														/>
+														<Avatar name={a.name} src={a.profile_picture} />
 														<div>
 															<p className="text-sm font-medium text-[#1b1b24]">
 																{a.name}
@@ -424,15 +444,23 @@ export default function InductionDashboard() {
 												</td>
 												{isAdmin && (
 													<td className="px-6 py-4 text-right">
-														<button
-															onClick={() => {
-																setSelectedApplicant(a);
-																setDrawerOpen(true);
-															}}
-															className="px-3 py-1.5 text-xs font-semibold text-white bg-[#3525cd] rounded-lg hover:opacity-90 transition-all"
-														>
-															Score
-														</button>
+														<div className="flex items-center justify-end gap-2">
+															<button
+																onClick={() => handleMoveToNextStage(a)}
+																className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-all"
+															>
+																Move to Next Stage
+															</button>
+															<button
+																onClick={() => {
+																	setSelectedApplicant(a);
+																	setDrawerOpen(true);
+																}}
+																className="px-3 py-1.5 text-xs font-semibold text-white bg-[#3525cd] rounded-lg hover:opacity-90 transition-all"
+															>
+																Score
+															</button>
+														</div>
 													</td>
 												)}
 											</tr>

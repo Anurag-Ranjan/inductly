@@ -8,13 +8,17 @@ import { MemberRole } from '@prisma/client';
 
 export const authorizeClubRole: RequestHandler = asyncHandler(
     async (req, res: Response, next: NextFunction) => {
-        const clubId = Number(req.params?.clubId);
+        let clubId = Number(req.params?.clubId);
         const userId = req.user?.id;
 
         if (!clubId || isNaN(clubId)) {
-            return res
-                .status(400)
-                .json({ message: 'Club ID is required for authorization.' });
+            clubId = Number(req.query.clubId);
+            if (!clubId || isNaN(clubId))
+                return res
+                    .status(400)
+                    .json({
+                        message: 'Club ID is required for authorization.'
+                    });
         }
 
         if (!userId) {

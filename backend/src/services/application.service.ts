@@ -109,10 +109,17 @@ const scoreApplicantService = async (
     applicationId: number,
     clubId: number,
     stageId: number,
-    data: {}
+    data: any
 ) => {
-    const { status, notes, score }: any = data;
-    if (status != StageStatus.PASSED || status != StageStatus.FAILED)
+    const {
+        status,
+        notes,
+        score
+    }: { status: StageStatus; notes: string; score: number } = data;
+    if (
+        status.toUpperCase() !== StageStatus.PASSED &&
+        status.toUpperCase() !== StageStatus.FAILED
+    )
         throw new ApiError(401, 'Please provide correct status');
     const application = await prisma.application.findFirst({
         where: {

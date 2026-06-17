@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { useScoreApplicantMutation } from "../../../../../features/application/applicationApi";
+import { useScoreApplicantMutation } from "../../../../../../../features/application/applicationApi";
 import Icon from "../Icon/Icon";
 
 const ScoringDrawer = ({
