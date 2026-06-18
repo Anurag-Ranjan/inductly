@@ -50,6 +50,19 @@ const applicationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["MyApplications", "Applications"],
 		}),
+		getApplicationResponse: builder.query({
+			query: ({
+				applicationId,
+				clubId,
+			}: {
+				applicationId: number;
+				clubId: number;
+			}) => ({
+				url: `/applications/${applicationId}/response`,
+				method: "GET",
+				params: { clubId },
+			}),
+		}),
 	}),
 });
 
@@ -58,4 +71,5 @@ export const {
 	useGetApplicationDetailsQuery,
 	useScoreApplicantMutation,
 	useMoveToNextStageMutation,
+	useGetApplicationResponseQuery,
 } = applicationApi;

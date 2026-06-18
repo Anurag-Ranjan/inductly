@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useGetApplicationDetailsQuery } from "../../features/application/applicationApi";
 import dayjs from "dayjs";
 
@@ -48,7 +49,12 @@ function StageItem({
 	stage,
 	isLast,
 }: {
-	stage: { name: string; status: string; score: number | null; notes: string | null };
+	stage: {
+		name: string;
+		status: string;
+		score: number | null;
+		notes: string | null;
+	};
 	isLast: boolean;
 }) {
 	const isPassed = stage.status === "PASSED";
@@ -129,12 +135,15 @@ function StageItem({
 
 export default function ApplicationDetailsCard({
 	applicationId,
+	clubId,
 	onClose,
 }: {
 	applicationId: number;
+	clubId?: number;
 	onClose?: () => void;
 }) {
 	const [visible, setVisible] = useState(true);
+	const navigate = useNavigate();
 	const { data: raw, isLoading } = useGetApplicationDetailsQuery(applicationId);
 
 	const handleClose = () => {
@@ -253,12 +262,24 @@ export default function ApplicationDetailsCard({
 						Support
 					</button>
 
-					<button
-						onClick={handleClose}
-						className="px-4 py-2 bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-200 hover:shadow-indigo-300 active:scale-95 transition-all"
-					>
-						Close Window
-					</button>
+					<div className="flex gap-3">
+						{clubId && (
+							<button
+								onClick={() =>
+									navigate(`/my-clubs/${clubId}/${applicationId}/response`)
+								}
+								className="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all"
+							>
+								View Full Response
+							</button>
+						)}
+						<button
+							onClick={handleClose}
+							className="px-4 py-2 bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-lg shadow-indigo-200 hover:shadow-indigo-300 active:scale-95 transition-all"
+						>
+							Close Window
+						</button>
+					</div>
 				</footer>
 			</div>
 

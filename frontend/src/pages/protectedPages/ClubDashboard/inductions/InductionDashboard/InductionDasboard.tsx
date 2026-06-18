@@ -566,6 +566,7 @@ export default function InductionDashboard() {
 					<div className="relative z-10">
 						<ApplicationDetailsCard
 							applicationId={selectedApplicationId}
+							clubId={Number(clubId)}
 							onClose={() => setSelectedApplicationId(null)}
 						/>
 					</div>

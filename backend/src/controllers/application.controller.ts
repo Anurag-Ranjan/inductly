@@ -4,11 +4,13 @@ import { ApiResponse } from '../utils/ApiResponse';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
     getApplicationDetailsService,
+    getApplicationWithFormResponseService,
     getMyApplicationsService,
     moveApplicationToNextStageService,
     scoreApplicantService
 } from '../services/application.service';
 import { UserRole } from '../types/roles.types';
+import { prisma } from '../utils/prisma';
 
 const getMyApplications: RequestHandler = asyncHandler(async (req, res) => {
     const user = req.user;
@@ -106,9 +108,44 @@ const moveApplicationToNextStage: RequestHandler = asyncHandler(
     }
 );
 
+const getApplicationWithFormResponse: RequestHandler = asyncHandler(
+    async (req, res) => {
+        const user = req.user;
+        if (!user) throw new ApiError(401, 'Unauthenticated');
+
+        const role = req.role;
+        if (!role || role === UserRole.VISITOR)
+            throw new ApiError(403, 'Unauthorised');
+
+        const applicationId = Number(req.params.applicationId);
+        if (!applicationId || isNaN(applicationId))
+            throw new ApiError(401, 'Invalid application id provided');
+
+        const clubId = Number(req.query.clubId);
+        if (!clubId || isNaN(clubId))
+            throw new ApiError(401, 'Invalid club id provided');
+
+        const response = await getApplicationWithFormResponseService(
+            applicationId,
+            clubId
+        );
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    response,
+                    'Application response fetched succesfully'
+                )
+            );
+    }
+);
+
 export {
     getMyApplications,
     getApplicationDetails,
     scoreApplicant,
-    moveApplicationToNextStage
+    moveApplicationToNextStage,
+    getApplicationWithFormResponse
 };

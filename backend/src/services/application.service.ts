@@ -287,9 +287,101 @@ const moveApplicationToNextStageService = async (
     return nextStageData;
 };
 
+const getApplicationWithFormResponseService = async (
+    applicationId: number,
+    clubId: number
+) => {
+    const application = await prisma.application.findFirst({
+        where: {
+            id: applicationId
+        },
+        select: {
+            id: true,
+            induction: {
+                select: {
+                    club_id: true
+                }
+            }
+        }
+    });
+    if (!application) throw new ApiError(404, 'Application not found');
+    if (clubId !== application?.induction.club_id)
+        throw new ApiError(403, 'Unauthorised');
+
+    const requiredApplication = await prisma.application.findFirst({
+        where: {
+            id: application.id
+        },
+        select: {
+            id: true,
+            created_at: true,
+            induction_id: true,
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                    profile_picture: true,
+                    branch: true,
+                    batch: true,
+                    github: true,
+                    linkedin: true
+                }
+            }
+        }
+    });
+
+    const response = await prisma.formResponse.findFirst({
+        where: {
+            application_id: application.id
+        }
+    });
+
+    if (!response) throw new ApiError(404, 'No response found');
+
+    const form = await prisma.form.findFirst({
+        where: {
+            induction_id: requiredApplication!.induction_id
+        },
+        select: {
+            questions: {
+                orderBy: {
+                    order_index: 'asc'
+                },
+                select: {
+                    question_text: true,
+                    question_type: true,
+                    metadata: true,
+                    answers: {
+                        where: {
+                            response_id: response?.id
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const returnData = {
+        application_id: requiredApplication?.id,
+        applied_on: requiredApplication?.created_at,
+        applicant_name: requiredApplication?.user.name,
+        applicant_email: requiredApplication!.user.email,
+        applicant_profile_picture: requiredApplication!.user.profile_picture,
+        applicant_branch: requiredApplication?.user.branch,
+        applicant_batch: requiredApplication?.user.batch,
+        applicant_github: requiredApplication?.user.github || 'Not Provided',
+        applicant_linkedin:
+            requiredApplication?.user.linkedin || 'Not Provided',
+        form
+    };
+
+    return returnData;
+};
+
 export {
     getMyApplicationsService,
     getApplicationDetailsService,
     scoreApplicantService,
-    moveApplicationToNextStageService
+    moveApplicationToNextStageService,
+    getApplicationWithFormResponseService
 };

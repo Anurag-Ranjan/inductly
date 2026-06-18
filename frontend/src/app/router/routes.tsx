@@ -22,6 +22,7 @@ import MyApplications from "../../pages/protectedPages/MyApplications/MyApplicat
 import ScheduleInduction from "../../pages/protectedPages/ClubDashboard/inductions/ScheduleInduction/ScheduleInduction";
 import ExploreClubs from "../../pages/protectedPages/ExploreClubs/ExploreClubs";
 import InductionDashboard from "../../pages/protectedPages/ClubDashboard/inductions/InductionDashboard/InductionDasboard";
+import ApplicantResponse from "../../pages/protectedPages/ClubDashboard/ApplicantResponse/ApplicantResponse";
 
 export const routes = createRoutesFromElements(
 	<>
@@ -45,6 +46,10 @@ export const routes = createRoutesFromElements(
 						<Route
 							path=":inductionId/induction-dashboard"
 							element={<InductionDashboard />}
+						/>
+						<Route
+							path=":applicationId/response"
+							element={<ApplicantResponse />}
 						/>
 						<Route path="create-induction" element={<CreateInduction />} />
 						<Route
