@@ -34,6 +34,22 @@ const applicationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["MyApplications", "Applications"],
 		}),
+		moveToNextStage: builder.mutation({
+			query: ({
+				applicationId,
+				stageId,
+				clubId,
+			}: {
+				applicationId: number;
+				stageId: number;
+				clubId: number;
+			}) => ({
+				url: `/applications/${applicationId}/stages/${stageId}/next-stage`,
+				method: "PATCH",
+				params: { clubId },
+			}),
+			invalidatesTags: ["MyApplications", "Applications"],
+		}),
 	}),
 });
 
@@ -41,4 +57,5 @@ export const {
 	useGetMyApplicationsQuery,
 	useGetApplicationDetailsQuery,
 	useScoreApplicantMutation,
+	useMoveToNextStageMutation,
 } = applicationApi;

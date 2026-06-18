@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import dayjs from "dayjs";
 import { useGetInductionDashboardQuery } from "../../../../../features/induction/inductionApi";
-import { useScoreApplicantMutation } from "../../../../../features/application/applicationApi";
+import { useMoveToNextStageMutation } from "../../../../../features/application/applicationApi";
 import ScoringDrawer from "./components/ScoringDrawer/ScoringDrawer";
 import Icon from "./components/Icon/Icon";
 import PrimaryStatCard from "./components/PrimaryStatCard/PrimaryStatCard";
 import CompletionCard from "./components/CompletionCard/CompletionCard";
 import SimpleStatCard from "./components/SimpleStatCard/SimpleStatCard";
 import ActiveApplicantsCard from "./components/ActiveApplicantsCard/ActiveApplicantsCard";
+import ApplicationDetailsCard from "../../../../../components/ui/ApplicationDetailsCard";
 import Loader from "../../../../../components/loaders/Loader";
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
@@ -120,19 +121,30 @@ export default function InductionDashboard() {
 		inductionId: Number(inductionId),
 	});
 
-	const [scoreApplicant] = useScoreApplicantMutation();
+	const [moveToNextStage, { isLoading: isMoving }] =
+		useMoveToNextStageMutation();
 
-	const handleMoveToNextStage = (applicant: any) => {
-		scoreApplicant({
-			applicationId: applicant.application_id,
-			stageId: applicant.currentStageId,
-			clubId: Number(clubId),
-			body: { status: "PASSED" },
-		});
+	const [confirmMove, setConfirmMove] = useState<any>(null);
+
+	const handleMoveToNextStage = async (applicant: any) => {
+		if (!applicant.application_id || !applicant.currentStageId) return;
+		try {
+			await moveToNextStage({
+				applicationId: applicant.application_id,
+				stageId: applicant.currentStageId,
+				clubId: Number(clubId),
+			}).unwrap();
+			setConfirmMove(null);
+		} catch {
+			// error handled by middleware
+		}
 	};
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
+	const [selectedApplicationId, setSelectedApplicationId] = useState<
+		number | null
+	>(null);
 	const [activeTab, setActiveTab] = useState("applicants");
 	const [searchTerm, setSearchTerm] = useState("");
 
@@ -404,6 +416,9 @@ export default function InductionDashboard() {
 										return (
 											<tr
 												key={a.application_id}
+												onClick={() =>
+													setSelectedApplicationId(a.application_id)
+												}
 												className="transition-colors cursor-pointer hover:bg-[#f5f2ff]"
 											>
 												<td className="px-6 py-4">
@@ -446,19 +461,31 @@ export default function InductionDashboard() {
 													<td className="px-6 py-4 text-right">
 														<div className="flex items-center justify-end gap-2">
 															<button
-																onClick={() => handleMoveToNextStage(a)}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	setConfirmMove(a);
+																}}
 																className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-all"
 															>
 																Move to Next Stage
 															</button>
 															<button
-																onClick={() => {
+																onClick={(e) => {
+																	e.stopPropagation();
 																	setSelectedApplicant(a);
 																	setDrawerOpen(true);
 																}}
 																className="px-3 py-1.5 text-xs font-semibold text-white bg-[#3525cd] rounded-lg hover:opacity-90 transition-all"
 															>
 																Score
+															</button>
+															<button
+																onClick={(e) => {
+																	e.stopPropagation();
+																}}
+																className="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-all"
+															>
+																Induct
 															</button>
 														</div>
 													</td>
@@ -496,6 +523,54 @@ export default function InductionDashboard() {
 			<button className="md:hidden fixed bottom-4 right-4 w-14 h-14 bg-[#712ae2] text-white rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform">
 				<Icon name="add" className="w-6 h-6" />
 			</button>
+
+			{confirmMove && (
+				<div className="fixed inset-0 z-60 flex items-center justify-center">
+					<div
+						className="fixed inset-0 bg-black/40"
+						onClick={() => setConfirmMove(null)}
+					/>
+					<div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6">
+						<h3 className="text-lg font-semibold text-[#1b1b24]">
+							Move to Next Stage
+						</h3>
+						<p className="mt-2 text-sm text-[#464555]">
+							Move {confirmMove.name} to the next stage?
+						</p>
+						<div className="mt-6 flex gap-3">
+							<button
+								onClick={() => setConfirmMove(null)}
+								disabled={isMoving}
+								className="flex-1 px-4 py-2.5 border border-[#c7c4d8] hover:bg-[#eae6f4] rounded-lg text-sm font-medium transition-all active:scale-95 disabled:opacity-50"
+							>
+								Cancel
+							</button>
+							<button
+								onClick={() => handleMoveToNextStage(confirmMove)}
+								disabled={isMoving}
+								className="flex-1 px-4 py-2.5 bg-emerald-600 text-white hover:opacity-90 rounded-lg text-sm font-medium shadow-md shadow-emerald-300/30 transition-all active:scale-95 disabled:opacity-50"
+							>
+								{isMoving ? "Moving..." : "Confirm"}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{selectedApplicationId && (
+				<div className="fixed inset-0 z-50">
+					<div
+						className="absolute inset-0 bg-black/40"
+						onClick={() => setSelectedApplicationId(null)}
+					/>
+					<div className="relative z-10">
+						<ApplicationDetailsCard
+							applicationId={selectedApplicationId}
+							onClose={() => setSelectedApplicationId(null)}
+						/>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -3,6 +3,7 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 import {
     getApplicationDetails,
     getMyApplications,
+    moveApplicationToNextStage,
     scoreApplicant
 } from '../controllers/application.controller';
 import { authorizeClubRole } from '../middlewares/role.middleware';
@@ -16,3 +17,6 @@ applicationRouter
 applicationRouter
     .route('/:applicationId/stages/:stageId')
     .patch(authMiddleware, authorizeClubRole, scoreApplicant);
+applicationRouter
+    .route('/:applicationId/stages/:stageId/next-stage')
+    .patch(authMiddleware, authorizeClubRole, moveApplicationToNextStage);

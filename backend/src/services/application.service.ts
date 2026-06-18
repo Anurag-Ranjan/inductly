@@ -189,8 +189,107 @@ const scoreApplicantService = async (
     return updatedScore;
 };
 
+const moveApplicationToNextStageService = async (
+    applicationId: number,
+    clubId: number,
+    stageId: number
+) => {
+    const application = await prisma.application.findFirst({
+        where: {
+            id: applicationId
+        },
+        select: {
+            id: true,
+            status: true,
+            induction: {
+                select: {
+                    club_id: true,
+                    stages: {
+                        orderBy: {
+                            order_index: 'asc'
+                        },
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
+            },
+            currentStage: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
+            stageProgress: {
+                select: {
+                    stage_id: true,
+                    status: true
+                }
+            }
+        }
+    });
+
+    if (!application) throw new ApiError(404, 'Application not found');
+
+    if (clubId !== application.induction.club_id)
+        throw new ApiError(403, 'Unauthorised');
+
+    if (
+        application.status === ApplicationStatus.REJECTED ||
+        application.status === ApplicationStatus.ACCEPTED
+    )
+        throw new ApiError(
+            401,
+            'Cannot promote rejected or accepted candidates'
+        );
+
+    if (application.currentStage?.id !== stageId)
+        throw new ApiError(401, 'Wrong stage id provided');
+
+    const currentstageProgress = application.stageProgress.filter(
+        (progress) => progress.stage_id === application.currentStage!.id
+    );
+
+    if (currentstageProgress[0]?.status !== StageStatus.PASSED)
+        throw new ApiError(401, 'Applicant has not passed current stage');
+
+    const currentStageIndex = application.induction.stages.findIndex(
+        (stage) => stage.id === application.currentStage!.id
+    );
+
+    if (currentStageIndex === application.induction.stages.length - 1) {
+        throw new ApiError(
+            401,
+            "Applicant already on last induction stage, can't move further"
+        );
+    }
+
+    const nextStage = application.induction.stages[currentStageIndex + 1];
+
+    const [nextStageData, updatedApplication] = await Promise.all([
+        prisma.applicationStageProgress.create({
+            data: {
+                stage_id: nextStage?.id!,
+                application_id: application.id
+            }
+        }),
+        prisma.application.update({
+            where: {
+                id: application.id
+            },
+            data: {
+                current_stage_id: nextStage?.id!
+            }
+        })
+    ]);
+
+    return nextStageData;
+};
+
 export {
     getMyApplicationsService,
     getApplicationDetailsService,
-    scoreApplicantService
+    scoreApplicantService,
+    moveApplicationToNextStageService
 };
