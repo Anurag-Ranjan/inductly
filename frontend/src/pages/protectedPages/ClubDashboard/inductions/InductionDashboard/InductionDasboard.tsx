@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router";
 import dayjs from "dayjs";
+import { toast } from "react-toastify";
 import { useGetInductionDashboardQuery } from "../../../../../features/induction/inductionApi";
-import { useMoveToNextStageMutation } from "../../../../../features/application/applicationApi";
+import {
+	useMoveToNextStageMutation,
+	useInductApplicantMutation,
+} from "../../../../../features/application/applicationApi";
 import ScoringDrawer from "./components/ScoringDrawer/ScoringDrawer";
 import Icon from "./components/Icon/Icon";
 import PrimaryStatCard from "./components/PrimaryStatCard/PrimaryStatCard";
@@ -124,7 +128,11 @@ export default function InductionDashboard() {
 	const [moveToNextStage, { isLoading: isMoving }] =
 		useMoveToNextStageMutation();
 
+	const [inductApplicant, { isLoading: isInducting }] =
+		useInductApplicantMutation();
+
 	const [confirmMove, setConfirmMove] = useState<any>(null);
+	const [confirmInduct, setConfirmInduct] = useState<any>(null);
 
 	const handleMoveToNextStage = async (applicant: any) => {
 		if (!applicant.application_id || !applicant.currentStageId) return;
@@ -137,6 +145,20 @@ export default function InductionDashboard() {
 			setConfirmMove(null);
 		} catch {
 			// error handled by middleware
+		}
+	};
+
+	const handleInduct = async (applicant: any) => {
+		if (!applicant.application_id) return;
+		try {
+			await inductApplicant({
+				applicationId: applicant.application_id,
+				clubId: Number(clubId),
+			}).unwrap();
+			toast.success(`${applicant.name} inducted successfully`);
+			setConfirmInduct(null);
+		} catch (err: any) {
+			toast.error(err?.data?.message || "Failed to induct applicant");
 		}
 	};
 
@@ -482,6 +504,7 @@ export default function InductionDashboard() {
 															<button
 																onClick={(e) => {
 																	e.stopPropagation();
+																	setConfirmInduct(a);
 																}}
 																className="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-all"
 															>
@@ -551,6 +574,39 @@ export default function InductionDashboard() {
 								className="flex-1 px-4 py-2.5 bg-emerald-600 text-white hover:opacity-90 rounded-lg text-sm font-medium shadow-md shadow-emerald-300/30 transition-all active:scale-95 disabled:opacity-50"
 							>
 								{isMoving ? "Moving..." : "Confirm"}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{confirmInduct && (
+				<div className="fixed inset-0 z-60 flex items-center justify-center">
+					<div
+						className="fixed inset-0 bg-black/40"
+						onClick={() => setConfirmInduct(null)}
+					/>
+					<div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6">
+						<h3 className="text-lg font-semibold text-[#1b1b24]">
+							Induct Applicant
+						</h3>
+						<p className="mt-2 text-sm text-[#464555]">
+							Induct {confirmInduct.name} as a club member?
+						</p>
+						<div className="mt-6 flex gap-3">
+							<button
+								onClick={() => setConfirmInduct(null)}
+								disabled={isInducting}
+								className="flex-1 px-4 py-2.5 border border-[#c7c4d8] hover:bg-[#eae6f4] rounded-lg text-sm font-medium transition-all active:scale-95 disabled:opacity-50"
+							>
+								Cancel
+							</button>
+							<button
+								onClick={() => handleInduct(confirmInduct)}
+								disabled={isInducting}
+								className="flex-1 px-4 py-2.5 bg-amber-600 text-white hover:opacity-90 rounded-lg text-sm font-medium shadow-md shadow-amber-300/30 transition-all active:scale-95 disabled:opacity-50"
+							>
+								{isInducting ? "Inducting..." : "Confirm"}
 							</button>
 						</div>
 					</div>

@@ -1,4 +1,4 @@
-import { ApplicationStatus, StageStatus } from '@prisma/client';
+import { ApplicationStatus, MemberRole, StageStatus } from '@prisma/client';
 import { ApiError } from '../utils/ApiError';
 import { prisma } from '../utils/prisma';
 
@@ -378,10 +378,97 @@ const getApplicationWithFormResponseService = async (
     return returnData;
 };
 
+const inductApplicantService = async (
+    applicationId: number,
+    clubId: number
+) => {
+    const application = await prisma.application.findFirst({
+        where: {
+            id: applicationId
+        },
+        select: {
+            id: true,
+            current_stage_id: true,
+            user_id: true,
+            induction: {
+                select: {
+                    id: true,
+                    club_id: true
+                }
+            }
+        }
+    });
+
+    if (!application) throw new ApiError(404, 'Application does not exist');
+
+    if (application.induction.club_id !== clubId)
+        throw new ApiError(
+            403,
+            'Unauthorised, induction does not belong to club'
+        );
+
+    const stages = await prisma.inductionStage.findMany({
+        where: {
+            induction_id: application.induction.id
+        },
+        orderBy: {
+            order_index: 'asc'
+        }
+    });
+
+    const applicant_stages = await prisma.applicationStageProgress.findMany({
+        where: {
+            application_id: application.id
+        },
+        select: {
+            stage_id: true,
+            status: true
+        }
+    });
+
+    const currentStageProgress = applicant_stages.filter(
+        (stage) => stage.stage_id === application.current_stage_id
+    );
+
+    const lastStageId = stages[stages.length - 1]?.id;
+
+    if (currentStageProgress[0]?.stage_id !== lastStageId)
+        throw new ApiError(401, 'Applicant not in the last pipeline stage');
+
+    if (currentStageProgress[0]?.status !== 'PASSED')
+        throw new ApiError(
+            401,
+            'Applicant has not passed the last induction stage'
+        );
+
+    const membership = await prisma.membership.create({
+        data: {
+            user_id: application.user_id,
+            club_id: application.induction.club_id,
+            role: MemberRole.MEMBER,
+            inducted_on: new Date()
+        }
+    });
+
+    if (!membership) throw new ApiError(500, 'Database Error');
+
+    await prisma.application.update({
+        where: {
+            id: application.id
+        },
+        data: {
+            status: ApplicationStatus.ACCEPTED
+        }
+    });
+
+    return membership;
+};
+
 export {
     getMyApplicationsService,
     getApplicationDetailsService,
     scoreApplicantService,
     moveApplicationToNextStageService,
-    getApplicationWithFormResponseService
+    getApplicationWithFormResponseService,
+    inductApplicantService
 };

@@ -6,6 +6,7 @@ import {
     getApplicationDetailsService,
     getApplicationWithFormResponseService,
     getMyApplicationsService,
+    inductApplicantService,
     moveApplicationToNextStageService,
     scoreApplicantService
 } from '../services/application.service';
@@ -142,10 +143,40 @@ const getApplicationWithFormResponse: RequestHandler = asyncHandler(
     }
 );
 
+const inductApplicant: RequestHandler = asyncHandler(async (req, res) => {
+    const role = req.role;
+    if (!role || role !== UserRole.ADMIN)
+        throw new ApiError(403, 'Unauthorised');
+
+    const applicationId = Number(req.params.applicationId);
+    if (!applicationId || isNaN(applicationId))
+        throw new ApiError(401, 'Invalid application id provided');
+
+    const clubId = Number(req.query.clubId);
+    if (!clubId || isNaN(clubId))
+        throw new ApiError(401, 'Invalid club id provided');
+
+    const createdMembership = await inductApplicantService(
+        applicationId,
+        clubId
+    );
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                createdMembership,
+                'Applicant inducted successfully'
+            )
+        );
+});
+
 export {
     getMyApplications,
     getApplicationDetails,
     scoreApplicant,
     moveApplicationToNextStage,
-    getApplicationWithFormResponse
+    getApplicationWithFormResponse,
+    inductApplicant
 };

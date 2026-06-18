@@ -4,6 +4,7 @@ import {
     getApplicationDetails,
     getApplicationWithFormResponse,
     getMyApplications,
+    inductApplicant,
     moveApplicationToNextStage,
     scoreApplicant
 } from '../controllers/application.controller';
@@ -24,3 +25,6 @@ applicationRouter
 applicationRouter
     .route('/:applicationId/stages/:stageId/next-stage')
     .patch(authMiddleware, authorizeClubRole, moveApplicationToNextStage);
+applicationRouter
+    .route('/:applicationId/induct')
+    .patch(authMiddleware, authorizeClubRole, inductApplicant);

@@ -230,7 +230,7 @@ export default function Home() {
 									<div className="w-3 h-3 rounded-full bg-indigo-200" />
 								</div>
 								<img
-									src="https://lh3.googleusercontent.com/aida-public/AB6AXuDazbUPdYb9bOKJaagYUTUzogmlhomKVXS6Dee0DENGq3KznXrGOjTS-UjMlhyYLMLjPs-J-zDQfJaYYNGbo2sQxHAPptdPt-hwpLc4k_LKPieqei76hVSpX13iaJpetIkUjAlyEX38CXyjHRKsKZOxTvqiTUXkuiSnWhYtQ8v4nIgiPBK-Ui38d-StVsQPDSuvc_TEay5S1g4DCo-L-DnED6CRLtx0FjKX632YSW-IDMJPpnh8LHFl6FzLPjLwY_PvNSAXz_6z2lpF"
+									src="https://res.cloudinary.com/dganxzevy/image/upload/v1781804984/Screenshot_from_2026-06-18_23-16-19_iw8p3p.png"
 									alt="Inductly Dashboard Preview"
 									className="w-full h-auto"
 								/>

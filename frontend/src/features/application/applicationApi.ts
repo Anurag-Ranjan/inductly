@@ -63,6 +63,20 @@ const applicationApi = baseApi.injectEndpoints({
 				params: { clubId },
 			}),
 		}),
+		inductApplicant: builder.mutation({
+			query: ({
+				applicationId,
+				clubId,
+			}: {
+				applicationId: number;
+				clubId: number;
+			}) => ({
+				url: `/applications/${applicationId}/induct`,
+				method: "PATCH",
+				params: { clubId },
+			}),
+			invalidatesTags: ["MyApplications", "Applications"],
+		}),
 	}),
 });
 
@@ -72,4 +86,5 @@ export const {
 	useScoreApplicantMutation,
 	useMoveToNextStageMutation,
 	useGetApplicationResponseQuery,
+	useInductApplicantMutation,
 } = applicationApi;
